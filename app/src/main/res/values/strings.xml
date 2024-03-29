@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">My ChatApp</string>
+    <string name="sign_in">Sign In</string>
+    <string name="sign_up">Sign Up</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="samir_suroshe">Samir Suroshe</string>
+
+</resources>

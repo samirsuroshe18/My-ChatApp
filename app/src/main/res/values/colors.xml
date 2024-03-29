@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white"> #EDEDED</color>
+    <color name="colorPrimary">#0b6156</color>
+    <color name="colorPrimaryDark">#095049</color>
+
+    <color name="colorSecondary">#0b6156</color>
+    <color name="colorSecondaryDark">#095049</color>
+    <color name="chatBackground">#ece5dd</color>
+
+    <color name="lightGrey">#DCF8C6</color>
+
+</resources>
