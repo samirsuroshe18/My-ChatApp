@@ -3,13 +3,13 @@
   # Project Name: My ChatApp (Whatsapp clone) <br>
 <div align="center">
   <img src="https://github.com/samirsuroshe18/My-ChatApp/assets/130245723/d236e6c8-d5eb-41a5-9fa9-b29f69e597d6" width="80" height="80" >
-  <a href="https://github.com/samirsuroshe18/WellBeing-app---Android-studio/releases/latest/">
+  <a href="https://github.com/samirsuroshe18/My-ChatApp/releases/tag/1.0.0">
 <img src="https://github.com/samirsuroshe18/WellBeing-app---Android-studio/assets/130245723/f2d2622b-2fd1-4576-af9e-68ec0e56c79e" height="80">
 </a>
 </div>
 
 ## Project Overview
-My ChatApp is a messaging application for Android devices, designed to provide users with a seamless chatting experience similar to popular messaging apps like WhatsApp. It allows users to exchange messages individually or in group chats, register and log in using their Google accounts, and manage their profiles. It was created in July 2023 and is available for download on Github. Application can be found [here](https://github.com/samirsuroshe18/WellBeing-app---Android-studio/releases/latest/). To use the app, simply download .apk file from the github and install on your android device, create an account, and start chatting.
+My ChatApp is a messaging application for Android devices, designed to provide users with a seamless chatting experience similar to popular messaging apps like WhatsApp. It allows users to exchange messages individually or in group chats, register and log in using their Google accounts, and manage their profiles. It was created in July 2023 and is available for download on Github. Application can be found [here](https://github.com/samirsuroshe18/My-ChatApp/releases/tag/1.0.0). To use the app, simply download .apk file from the github and install on your android device, create an account, and start chatting.
 
 ## Technologies Used
 This project was built using a variety of technologies across the frontend, backend, and design. Below is a breakdown of the key technologies used in the development of this app:
