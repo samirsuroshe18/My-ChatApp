@@ -1,7 +1,17 @@
 
 
   # Project Name: My ChatApp (Whatsapp clone) <br>
-<div align="center">
+
+
+<img src="https://github.com/samirsuroshe18/My-ChatApp/assets/130245723/b1fa434e-e61b-461e-b0c0-04a354eafb8f" width="188" >  
+<img src="https://github.com/samirsuroshe18/My-ChatApp/assets/130245723/60412565-6c0c-4fb5-99d2-c200f910504d" width="188" >  
+<img src="https://github.com/samirsuroshe18/My-ChatApp/assets/130245723/19a38a3d-7e86-4d48-8c2d-e3264cd60dee" width="188" >  
+<img src="https://github.com/samirsuroshe18/My-ChatApp/assets/130245723/68cf6a45-e9da-4c48-b896-3d1ee374c781" width="188" > 
+<img src="https://github.com/samirsuroshe18/My-ChatApp/assets/130245723/3462d43d-5afc-47e7-a88f-7c0a6df89969" width="188" >
+<img src="https://github.com/samirsuroshe18/My-ChatApp/assets/130245723/2d456208-8b1e-4b11-a36a-601f52078887" width="188" >
+
+## Get
+<div>
   <img src="https://github.com/samirsuroshe18/My-ChatApp/assets/130245723/d236e6c8-d5eb-41a5-9fa9-b29f69e597d6" width="80" height="80" >
   <a href="https://github.com/samirsuroshe18/My-ChatApp/releases/tag/1.0.0">
 <img src="https://github.com/samirsuroshe18/WellBeing-app---Android-studio/assets/130245723/f2d2622b-2fd1-4576-af9e-68ec0e56c79e" height="80">
