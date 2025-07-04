@@ -1,7 +1,18 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Base.Theme.MyChatApp" parent="Theme.AppCompat.DayNight.DarkActionBar">
+    <style name="Base.Theme.MyChatApp" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+        <item name="colorPrimary">@color/whatsapp_primary_dark_theme</item>
+        <item name="colorPrimaryVariant">@color/whatsapp_primary_variant_dark_theme</item>
+        <item name="android:colorBackground">@color/whatsapp_background_dark</item>
+        <item name="colorSurface">@color/whatsapp_surface_dark</item>
+        <item name="colorOnBackground">@color/whatsapp_on_background_dark</item>
+        <item name="colorOnSurface">@color/whatsapp_on_surface_dark</item>
+        <item name="android:statusBarColor">@color/whatsapp_status_bar_dark</item>
+        <item name="android:navigationBarColor">@color/whatsapp_nav_bar_dark</item>
+        <item name="android:textColorPrimary">@color/whatsapp_text_primary_dark</item>
+        <item name="android:textColorSecondary">@color/whatsapp_text_secondary_dark</item>
+        <item name="android:windowBackground">@color/whatsapp_window_background_dark</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 </resources>

@@ -2,7 +2,43 @@ package com.example.mychatapp.Models;
 
 public class Users {
 
-    String profilepic, userName, mail, password, userId, lastMessage, about;
+    String profilepic;
+    String userName;
+    String mail;
+    String password;
+    String userId;
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    String lastMessage;
+    String about, status;
+
+    public String getFCMToken() {
+        return FCMToken;
+    }
+
+    public void setFCMToken(String FCMToken) {
+        this.FCMToken = FCMToken;
+    }
+
+    public Users(String profilepic, String userName, String mail, String password, String userId, String lastMessage, String about, String FCMToken) {
+        this.profilepic = profilepic;
+        this.userName = userName;
+        this.mail = mail;
+        this.password = password;
+        this.userId = userId;
+        this.lastMessage = lastMessage;
+        this.about = about;
+        this.FCMToken = FCMToken;
+    }
+
+    String FCMToken;
 
     public Users(String profilepic, String userName, String mail, String password, String userId, String lastMessage) {
         this.profilepic = profilepic;

@@ -1,17 +1,58 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Base.Theme.MyChatApp" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+    <style name="Base.Theme.MyChatApp" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryVariant">@color/colorPrimaryDark</item>
-        <item name="colorOnPrimary">@color/white</item>
+        <!-- Primary brand color - WhatsApp green -->
+        <item name="colorPrimary">@color/whatsapp_primary</item>
+        <item name="colorPrimaryVariant">@color/whatsapp_primary_dark</item>
+        <item name="colorOnPrimary">@android:color/white</item>
 
-        <item name="colorSecondary">@color/colorSecondary</item>
-        <item name="colorSecondaryVariant">@color/colorSecondaryDark</item>
-        <item name="colorOnSecondary">@color/black</item>
+        <!-- Secondary brand color -->
+        <item name="colorSecondary">@color/whatsapp_accent</item>
+        <item name="colorSecondaryVariant">@color/whatsapp_accent_dark</item>
+        <item name="colorOnSecondary">@android:color/white</item>
 
-        <item name="android:statusBarColor" tools:targetApi="1">?attr/colorPrimaryVariant</item>
+        <!-- Background colors -->
+        <item name="android:colorBackground">@color/whatsapp_background</item>
+        <item name="colorSurface">@color/whatsapp_surface</item>
+        <item name="colorOnBackground">@color/whatsapp_on_background</item>
+        <item name="colorOnSurface">@color/whatsapp_on_surface</item>
+
+        <!-- Status bar -->
+        <item name="android:statusBarColor">@color/whatsapp_status_bar</item>
+        <item name="android:windowLightStatusBar">false</item>
+
+        <!-- Navigation bar -->
+        <item name="android:navigationBarColor">@color/whatsapp_nav_bar</item>
+
+        <!-- Text colors -->
+        <item name="android:textColorPrimary">@color/whatsapp_text_primary</item>
+        <item name="android:textColorSecondary">@color/whatsapp_text_secondary</item>
+        <item name="android:textColorHint">@color/whatsapp_text_hint</item>
+
+        <!-- Chat specific colors -->
+        <item name="colorError">@color/whatsapp_error</item>
+        <item name="colorOnError">@android:color/white</item>
+
+        <!-- Window background -->
+        <item name="android:windowBackground">@color/whatsapp_window_background</item>
+
+        <!-- Action mode -->
+        <item name="windowActionModeOverlay">true</item>
+        <item name="actionModeBackground">@color/whatsapp_action_mode</item>
+
+        <!-- Divider color -->
+        <item name="android:listDivider">@color/whatsapp_divider</item>
+
+        <!-- Button styles -->
+        <item name="materialButtonStyle">@style/Widget.MyChatApp.Button</item>
+        <item name="borderlessButtonStyle">@style/Widget.MyChatApp.Button.Borderless</item>
+
+        <!-- EditText style -->
+        <item name="editTextStyle">@style/Widget.MyChatApp.EditText</item>
+
+        <!-- Toolbar style -->
+        <item name="toolbarStyle">@style/Widget.MyChatApp.Toolbar</item>
     </style>
 
     <style name="Theme.MyChatApp" parent="Base.Theme.MyChatApp" />

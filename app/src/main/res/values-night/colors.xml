@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark Theme Colors -->
+    <color name="whatsapp_primary_dark_theme">#25D366</color>
+    <color name="whatsapp_primary_variant_dark_theme">#1DA851</color>
+    <color name="whatsapp_background_dark">#111B21</color>
+    <color name="whatsapp_surface_dark">#202C33</color>
+    <color name="whatsapp_on_background_dark">#E9EDEF</color>
+    <color name="whatsapp_on_surface_dark">#E9EDEF</color>
+    <color name="whatsapp_window_background_dark">#0B141A</color>
+</resources>
