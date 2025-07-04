@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorSurface"
+    tools:context=".Fragments.HomeFragment">
+
+    <!-- App Bar with elevated design -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorSurface"
+        app:elevation="0dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="20dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="12dp">
+
+            <!-- Header with title and action buttons -->
+            <TextView
+                android:id="@+id/titleText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/google_sans"
+                android:text="Messages"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="28sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.01"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Chat status indicators -->
+    <LinearLayout
+        android:id="@+id/statusContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="start"
+        android:orientation="horizontal"
+        android:paddingHorizontal="20dp"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/appBarLayout">
+
+        <!-- All chats filter -->
+        <com.google.android.material.chip.Chip
+            android:id="@+id/allChatsChip"
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:checked="true"
+            android:text="All"
+            android:textColor="?attr/colorOnPrimary"
+            app:chipBackgroundColor="?attr/colorPrimary"
+            app:chipStrokeColor="?attr/colorPrimary" />
+
+        <!-- Unread filter -->
+        <com.google.android.material.chip.Chip
+            android:id="@+id/unreadChip"
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:text="Unread"
+            app:chipBackgroundColor="?attr/colorSurfaceVariant"
+            app:chipStrokeColor="?attr/colorOutline" />
+
+    </LinearLayout>
+
+    <!-- Shimmer Layout Container for Chat List -->
+    <com.facebook.shimmer.ShimmerFrameLayout
+        android:id="@+id/shimmer_chat_container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="5dp"
+        android:visibility="visible"
+        app:layout_constraintTop_toBottomOf="@+id/statusContainer"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Shimmer placeholder content -->
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="20dp"
+                android:paddingBottom="20dp">
+
+                <!-- Include multiple shimmer chat items -->
+                <include layout="@layout/shimmer_chat_item" />
+                <include layout="@layout/shimmer_chat_item" />
+                <include layout="@layout/shimmer_chat_item" />
+                <include layout="@layout/shimmer_chat_item" />
+                <include layout="@layout/shimmer_chat_item" />
+                <include layout="@layout/shimmer_chat_item" />
+                <include layout="@layout/shimmer_chat_item" />
+                <include layout="@layout/shimmer_chat_item" />
+                <include layout="@layout/shimmer_chat_item" />
+                <include layout="@layout/shimmer_chat_item" />
+                <include layout="@layout/shimmer_chat_item" />
+                <include layout="@layout/shimmer_chat_item" />
+                <include layout="@layout/shimmer_chat_item" />
+                <include layout="@layout/shimmer_chat_item" />
+                <include layout="@layout/shimmer_chat_item" />
+                <include layout="@layout/shimmer_chat_item" />
+                <include layout="@layout/shimmer_chat_item" />
+                <include layout="@layout/shimmer_chat_item" />
+                <include layout="@layout/shimmer_chat_item" />
+                <include layout="@layout/shimmer_chat_item" />
+
+            </LinearLayout>
+
+        </androidx.core.widget.NestedScrollView>
+
+    </com.facebook.shimmer.ShimmerFrameLayout>
+
+    <!-- Main content area (initially hidden) -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        android:layout_marginTop="5dp"
+        android:visibility="gone"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        app:layout_constraintTop_toBottomOf="@+id/statusContainer"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Chat list RecyclerView -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/chatListItem"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                android:nestedScrollingEnabled="false"
+                android:paddingHorizontal="20dp"
+                android:paddingBottom="20dp" />
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Floating Action Button for new chat -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/selectContact"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="24dp"
+        android:src="@drawable/ic_add"
+        app:backgroundTint="?attr/colorPrimary"
+        app:tint="?attr/colorOnPrimary"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:elevation="6dp"
+        android:contentDescription="Start new chat" />
+
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/chatAnim"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:lottie_autoPlay="true"
+        app:lottie_loop="true"
+        app:lottie_rawRes="@raw/chat_lottie" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

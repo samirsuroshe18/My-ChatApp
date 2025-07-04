@@ -2,12 +2,23 @@ package com.example.mychatapp.Models;
 
 public class MessageModel {
     String uId, message, messageId, groupMsgId;
+    boolean seen;
+
+    public boolean isSeen() {
+        return seen;
+    }
+
+    public void setSeen(boolean seen) {
+        this.seen = seen;
+    }
+
     long timestamp;
 
-    public MessageModel(String uId, String message, long timestamp) {
+    public MessageModel(String uId, String message, long timestamp, boolean isSeen) {
         this.uId = uId;
         this.message = message;
         this.timestamp = timestamp;
+        this.seen = isSeen;
     }
 
     public MessageModel(String uId, String message) {

@@ -1,0 +1,112 @@
+<!-- Updated ConstraintLayout with Shimmer -->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".SelectContactActivity">
+
+    <!-- Toolbar at the top -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="0dp"
+        android:layout_height="?attr/actionBarSize"
+        app:navigationIcon="@drawable/arrow_back_icon"
+        app:navigationIconTint="?attr/colorOnPrimary"
+        app:title="Select Contact"
+        app:subtitle="30 contacts"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Refresh button anchored to toolbar -->
+    <ImageButton
+        android:id="@+id/refresh_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="20dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Refresh"
+        android:src="@drawable/refresh"
+        app:layout_constraintBottom_toBottomOf="@+id/toolbar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="?attr/colorOnPrimary" />
+
+    <!-- Circular progress shown in same position -->
+    <com.google.android.material.progressindicator.CircularProgressIndicator
+        android:id="@+id/refresh_progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+        android:visibility="gone"
+        app:indicatorColor="?attr/colorOnPrimary"
+        android:layout_marginEnd="20dp"
+        app:indicatorSize="16dp"
+        app:trackThickness="3dp"
+        app:layout_constraintBottom_toBottomOf="@+id/toolbar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <!-- Shimmer Layout Container -->
+    <com.facebook.shimmer.ShimmerFrameLayout
+        android:id="@+id/shimmer_view_container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar">
+
+        <!-- Shimmer placeholder content -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <!-- Include multiple shimmer items -->
+            <include layout="@layout/shimmer_contact_item" />
+            <include layout="@layout/shimmer_contact_item" />
+            <include layout="@layout/shimmer_contact_item" />
+            <include layout="@layout/shimmer_contact_item" />
+            <include layout="@layout/shimmer_contact_item" />
+            <include layout="@layout/shimmer_contact_item" />
+            <include layout="@layout/shimmer_contact_item" />
+            <include layout="@layout/shimmer_contact_item" />
+            <include layout="@layout/shimmer_contact_item" />
+            <include layout="@layout/shimmer_contact_item" />
+            <include layout="@layout/shimmer_contact_item" />
+            <include layout="@layout/shimmer_contact_item" />
+            <include layout="@layout/shimmer_contact_item" />
+            <include layout="@layout/shimmer_contact_item" />
+            <include layout="@layout/shimmer_contact_item" />
+            <include layout="@layout/shimmer_contact_item" />
+            <include layout="@layout/shimmer_contact_item" />
+            <include layout="@layout/shimmer_contact_item" />
+            <include layout="@layout/shimmer_contact_item" />
+            <include layout="@layout/shimmer_contact_item" />
+            <include layout="@layout/shimmer_contact_item" />
+            <include layout="@layout/shimmer_contact_item" />
+            <include layout="@layout/shimmer_contact_item" />
+            <include layout="@layout/shimmer_contact_item" />
+            <include layout="@layout/shimmer_contact_item" />
+
+        </LinearLayout>
+
+    </com.facebook.shimmer.ShimmerFrameLayout>
+
+    <!-- RecyclerView (initially hidden) -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/selectChatRV"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

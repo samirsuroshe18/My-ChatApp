@@ -1,14 +1,113 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white"> #EDEDED</color>
-    <color name="colorPrimary">#0b6156</color>
-    <color name="colorPrimaryDark">#095049</color>
+    <!-- Primary WhatsApp Colors -->
+    <color name="whatsapp_primary">#25D366</color>
+    <color name="whatsapp_primary_dark">#1DA851</color>
+    <color name="whatsapp_accent">#34B7F1</color>
+    <color name="whatsapp_accent_dark">#2196F3</color>
 
-    <color name="colorSecondary">#0b6156</color>
-    <color name="colorSecondaryDark">#095049</color>
-    <color name="chatBackground">#ece5dd</color>
+    <color name="blue">#2196F3</color>
+    <color name="gray">#888888</color>
 
-    <color name="lightGrey">#DCF8C6</color>
+    <!-- Light Theme Colors -->
+    <color name="whatsapp_background">#FFFFFF</color>
+    <color name="whatsapp_surface">#FFFFFF</color>
+    <color name="whatsapp_on_background">#000000</color>
+    <color name="whatsapp_on_surface">#000000</color>
+    <color name="whatsapp_window_background">#E5DDD5</color>
+
+    <!-- Status and Navigation Bar -->
+    <color name="whatsapp_status_bar">#1DA851</color>
+    <color name="whatsapp_nav_bar">#FFFFFF</color>
+    <color name="whatsapp_status_bar_dark">#1DA851</color>
+    <color name="whatsapp_nav_bar_dark">#111B21</color>
+
+    <!-- Text Colors -->
+    <color name="whatsapp_text_primary">#1F2937</color>
+    <color name="whatsapp_text_secondary">#6B7280</color>
+    <color name="whatsapp_text_hint">#9CA3AF</color>
+    <color name="whatsapp_text_primary_dark">#E9EDEF</color>
+    <color name="whatsapp_text_secondary_dark">#8696A0</color>
+
+    <!-- Chat Colors -->
+    <color name="whatsapp_chat_background">#E5DDD5</color>
+    <color name="whatsapp_chat_background_dark">#0B141A</color>
+    <color name="whatsapp_chat_sent_bubble">#DCF8C6</color>
+    <color name="whatsapp_chat_received_bubble">#FFFFFF</color>
+    <color name="whatsapp_chat_sent_bubble_dark">#005C4B</color>
+    <color name="whatsapp_chat_received_bubble_dark">#202C33</color>
+    <color name="whatsapp_chat_text">#1F2937</color>
+    <color name="whatsapp_chat_text_dark">#E9EDEF</color>
+    <color name="whatsapp_chat_time">#667085</color>
+    <color name="whatsapp_chat_time_dark">#8696A0</color>
+
+    <!-- UI Element Colors -->
+    <color name="whatsapp_divider">#E5E7EB</color>
+    <color name="whatsapp_divider_dark">#2A3942</color>
+    <color name="whatsapp_ripple">#1F25D366</color>
+    <color name="whatsapp_input_background">#F9FAFB</color>
+    <color name="whatsapp_input_background_dark">#2A3942</color>
+
+    <!-- Toolbar Colors -->
+    <color name="whatsapp_toolbar_subtitle">#B3FFFFFF</color>
+    <color name="whatsapp_action_mode">#1DA851</color>
+
+    <!-- Tab Colors -->
+    <color name="whatsapp_tab_text">#B3FFFFFF</color>
+
+    <!-- Error Colors -->
+    <color name="whatsapp_error">#DC2626</color>
+    <color name="whatsapp_success">#10B981</color>
+    <color name="whatsapp_warning">#F59E0B</color>
+
+    <!-- Dialog and Bottom Sheet -->
+    <color name="whatsapp_dialog_background">#FFFFFF</color>
+    <color name="whatsapp_dialog_background_dark">#202C33</color>
+    <color name="whatsapp_bottom_sheet_background">#FFFFFF</color>
+    <color name="whatsapp_bottom_sheet_background_dark">#202C33</color>
+
+    <!-- Additional WhatsApp Specific Colors -->
+    <color name="whatsapp_online_indicator">#25D366</color>
+    <color name="whatsapp_unread_badge">#25D366</color>
+    <color name="whatsapp_message_read">#4FC3F7</color>
+    <color name="whatsapp_message_delivered">#9E9E9E</color>
+    <color name="whatsapp_message_pending">#FFC107</color>
+
+    <!-- Contact List Colors -->
+    <color name="whatsapp_contact_initial_bg">#25D366</color>
+
+    <!-- Attachment Colors -->
+    <color name="whatsapp_document_bg">#DCF8C6</color>
+    <color name="whatsapp_audio_bg">#E8F5E8</color>
+    <color name="whatsapp_video_bg">#F0F8FF</color>
+
+    <!-- Swipe Actions -->
+    <color name="whatsapp_archive_bg">#128C7E</color>
+    <color name="whatsapp_delete_bg">#DC2626</color>
+    <color name="whatsapp_pin_bg">#F59E0B</color>
+
+    <!-- Transparency Colors -->
+    <color name="whatsapp_overlay">#80000000</color>
+    <color name="whatsapp_scrim">#52000000</color>
+
+    <!-- Material You Dynamic Colors (API 31+) -->
+    <color name="whatsapp_surface_variant">#F3F4F6</color>
+    <color name="whatsapp_surface_variant_dark">#2A3942</color>
+    <color name="whatsapp_on_surface_variant">#4B5563</color>
+    <color name="whatsapp_on_surface_variant_dark">#8696A0</color>
+    <color name="whatsapp_outline">#D1D5DB</color>
+    <color name="whatsapp_outline_dark">#3C4043</color>
+
+    <color name="lightGrey">#E0E0E0</color>
+
+
+    <!-- Dark Theme Colors -->
+    <color name="whatsapp_primary_dark_theme">#25D366</color>
+    <color name="whatsapp_primary_variant_dark_theme">#1DA851</color>
+    <color name="whatsapp_background_dark">#111B21</color>
+    <color name="whatsapp_surface_dark">#202C33</color>
+    <color name="whatsapp_on_background_dark">#E9EDEF</color>
+    <color name="whatsapp_on_surface_dark">#E9EDEF</color>
+    <color name="whatsapp_window_background_dark">#0B141A</color>
 
 </resources>

@@ -1,0 +1,47 @@
+<!-- res/layout/shimmer_contact_item.xml -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="16dp">
+
+    <!-- Profile Picture Placeholder -->
+    <View
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginEnd="16dp"
+        android:background="@drawable/shimmer_shape"
+        android:layout_gravity="center_vertical" />
+
+    <!-- Text Content Placeholder -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_gravity="center_vertical">
+
+        <!-- Name Placeholder -->
+        <View
+            android:layout_width="150dp"
+            android:layout_height="16dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/shimmer_shape" />
+
+        <!-- Status/Email Placeholder -->
+        <View
+            android:layout_width="200dp"
+            android:layout_height="12dp"
+            android:background="@drawable/shimmer_shape" />
+
+    </LinearLayout>
+
+    <!-- Options/Status Placeholder -->
+    <View
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_gravity="center_vertical"
+        android:background="@drawable/shimmer_shape" />
+
+</LinearLayout>

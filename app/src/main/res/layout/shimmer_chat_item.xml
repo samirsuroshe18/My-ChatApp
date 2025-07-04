@@ -1,0 +1,74 @@
+<!-- res/layout/shimmer_chat_item.xml -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="12dp"
+    android:layout_marginBottom="4dp">
+
+    <!-- Profile Picture Placeholder -->
+    <View
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_marginEnd="16dp"
+        android:background="@drawable/shimmer_circle_shape"
+        android:layout_gravity="center_vertical" />
+
+    <!-- Chat Content Placeholder -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_gravity="center_vertical">
+
+        <!-- Top row with name and time -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="6dp">
+
+            <!-- Name Placeholder -->
+            <View
+                android:layout_width="140dp"
+                android:layout_height="16dp"
+                android:layout_weight="1"
+                android:background="@drawable/shimmer_shape" />
+
+            <!-- Time Placeholder -->
+            <View
+                android:layout_width="50dp"
+                android:layout_height="12dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/shimmer_shape" />
+
+        </LinearLayout>
+
+        <!-- Bottom row with message and status -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- Message Placeholder -->
+            <View
+                android:layout_width="0dp"
+                android:layout_height="14dp"
+                android:layout_weight="1"
+                android:background="@drawable/shimmer_shape" />
+
+            <!-- Status/Badge Placeholder -->
+            <View
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/shimmer_circle_shape" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>
