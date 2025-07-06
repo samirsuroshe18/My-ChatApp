@@ -183,9 +183,12 @@ public class ChatDetailActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
                     Object status = snapshot.child("status").getValue();
-                    if(status instanceof Long){
+                    Log.d(TAG, "User status Type listener: " + status.getClass());
+                    if(status instanceof Number){
+                        Log.d(TAG, "User status listener Long: " + status);
                         updateUserStatus(getTimeAgo((Long) status));
                     }else {
+                        Log.d(TAG, "User status listener: " + status);
                         updateUserStatus((String) status);
                     }
                 }
@@ -200,6 +203,7 @@ public class ChatDetailActivity extends AppCompatActivity {
     }
 
     private void updateUserStatus(String status) {
+        Log.d(TAG, "Updating user status: " + status);
         if (status == null) return;
 
         switch (status) {
@@ -481,10 +485,11 @@ public class ChatDetailActivity extends AppCompatActivity {
         usersRef.child(receiverId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                Users receiverUser = snapshot.getValue(Users.class);
-                if (receiverUser != null) {
+                String userName = snapshot.child("userName").getValue(String.class);
+                String profilepic = snapshot.child("profilepic").getValue(String.class);
+                if (userName != null && profilepic != null) {
                     ChatlistModel senderChatEntry = createChatListEntry(
-                            receiverId, receiverUser.getUserName(), receiverUser.getProfilepic(),
+                            receiverId, userName, profilepic,
                             messageText, currentTime, senderId, true, false, 0);
 
                     chatListRef.child(senderId).child(receiverId).setValue(senderChatEntry);
@@ -502,8 +507,9 @@ public class ChatDetailActivity extends AppCompatActivity {
         usersRef.child(senderId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                Users senderUser = snapshot.getValue(Users.class);
-                if (senderUser != null) {
+                String userName = snapshot.child("userName").getValue(String.class);
+                String profilepic = snapshot.child("profilepic").getValue(String.class);
+                if (userName != null && profilepic != null) {
                     // Check existing unread count
                     chatListRef.child(receiverId).child(senderId)
                             .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -516,13 +522,13 @@ public class ChatDetailActivity extends AppCompatActivity {
                                     }
 
                                     ChatlistModel receiverChatEntry = createChatListEntry(
-                                            senderId, senderUser.getUserName(), senderUser.getProfilepic(),
+                                            senderId, userName, profilepic,
                                             messageText, currentTime, senderId, false, true, unreadCount);
 
                                     chatListRef.child(receiverId).child(senderId).setValue(receiverChatEntry);
 
                                     // Send notification
-                                    sendNotification(senderUser, messageText);
+                                    sendNotification(userName, profilepic, messageText);
                                 }
 
                                 @Override
@@ -556,7 +562,7 @@ public class ChatDetailActivity extends AppCompatActivity {
         return chatEntry;
     }
 
-    private void sendNotification(Users senderUser, String messageText) {
+    private void sendNotification(String userName, String profilePic, String messageText) {
         usersRef.child(receiverId).child("FCMToken")
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -564,7 +570,7 @@ public class ChatDetailActivity extends AppCompatActivity {
                         String fcmToken = snapshot.getValue(String.class);
                         if (fcmToken != null) {
                             NotificationSender.sendNotification(fcmToken, senderId,
-                                    senderUser.getUserName(), messageText, senderUser.getProfilepic());
+                                    userName, messageText, profilePic);
                         }
                     }
 
