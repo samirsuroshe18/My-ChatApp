@@ -33,26 +33,6 @@
         <!-- Chat specific colors -->
         <item name="colorError">@color/whatsapp_error</item>
         <item name="colorOnError">@android:color/white</item>
-
-        <!-- Window background -->
-        <item name="android:windowBackground">@color/whatsapp_window_background</item>
-
-        <!-- Action mode -->
-        <item name="windowActionModeOverlay">true</item>
-        <item name="actionModeBackground">@color/whatsapp_action_mode</item>
-
-        <!-- Divider color -->
-        <item name="android:listDivider">@color/whatsapp_divider</item>
-
-        <!-- Button styles -->
-        <item name="materialButtonStyle">@style/Widget.MyChatApp.Button</item>
-        <item name="borderlessButtonStyle">@style/Widget.MyChatApp.Button.Borderless</item>
-
-        <!-- EditText style -->
-        <item name="editTextStyle">@style/Widget.MyChatApp.EditText</item>
-
-        <!-- Toolbar style -->
-        <item name="toolbarStyle">@style/Widget.MyChatApp.Toolbar</item>
     </style>
 
     <style name="Theme.MyChatApp" parent="Base.Theme.MyChatApp" />

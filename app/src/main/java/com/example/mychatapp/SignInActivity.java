@@ -1,9 +1,11 @@
 package com.example.mychatapp;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -47,7 +49,8 @@ public class SignInActivity extends AppCompatActivity {
     private DatabaseReference databaseReference;
 
     // Progress dialog for loading states
-    private ProgressDialogFragment progressDialog;
+//    private ProgressDialogFragment progressDialog;
+    private ProgressDialog progressDialog;
 
     // Activity result launcher for Google Sign-In
     private ActivityResultLauncher<Intent> googleSignInLauncher;
@@ -60,10 +63,14 @@ public class SignInActivity extends AppCompatActivity {
         binding = ActivitySignInBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        initializeFirebaseComponents();
         initializeProgressDialog();
+        initializeFirebaseComponents();
         setupGoogleSignInLauncher();
         setupClickListeners();
+
+        if (getIntent().getBooleanExtra("verify_notice", false)) {
+            Toast.makeText(this, "Please verify your email before logging in.", Toast.LENGTH_LONG).show();
+        }
     }
 
     @Override
@@ -91,10 +98,10 @@ public class SignInActivity extends AppCompatActivity {
      * Initialize progress dialog with loading message
      */
     private void initializeProgressDialog() {
-        progressDialog = ProgressDialogFragment.newInstance(
-                "My Custom Title",
-                "This is the subtitle or status message"
-        );
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setTitle("Logging In");
+        progressDialog.setMessage("Please wait...");
+        progressDialog.setCancelable(false);
     }
 
     /**
@@ -115,7 +122,7 @@ public class SignInActivity extends AppCompatActivity {
         googleSignInLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
-//                    dismissProgressDialog();
+                    progressDialog.dismiss();
 
                     if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                         handleGoogleSignInResult(result.getData());
@@ -139,6 +146,20 @@ public class SignInActivity extends AppCompatActivity {
 
         // Navigate to registration/main activity
         binding.ExistingAccount.setOnClickListener(v -> navigateToRegistration());
+
+        binding.btnfb.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(SignInActivity.this, "Facebook login is not available yet.", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        binding.signUpPhone.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(SignInActivity.this, "Phone number login is not available yet.", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     /**
@@ -153,18 +174,26 @@ public class SignInActivity extends AppCompatActivity {
             return;
         }
 
-//        showProgressDialog();
+        progressDialog.show();
 
         assert password != null;
         assert email != null;
         firebaseAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
-//                    dismissProgressDialog();
-
                     if (task.isSuccessful()) {
-                        Log.d(TAG, "Email/Password sign-in successful");
-                        navigateToHome();
+                        FirebaseUser user = firebaseAuth.getCurrentUser();
+
+                        if (user != null && user.isEmailVerified()) {
+                            Log.d(TAG, "Email verified. Navigating to Home.");
+                            navigateToHome();
+                        } else {
+                            progressDialog.dismiss();
+                            firebaseAuth.signOut(); // Prevent access
+                            Toast.makeText(this, "Please verify your email before logging in.", Toast.LENGTH_LONG).show();
+                        }
+
                     } else {
+                        progressDialog.dismiss();
                         handleAuthenticationError("Email/Password sign-in failed", task.getException());
                     }
                 });
@@ -175,6 +204,7 @@ public class SignInActivity extends AppCompatActivity {
      */
     private void initiateGoogleSignIn() {
 //        showProgressDialog();
+        progressDialog.show();
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
@@ -209,22 +239,46 @@ public class SignInActivity extends AppCompatActivity {
     /**
      * Authenticate with Firebase using Google credentials
      */
-    private void authenticateWithFirebase(@NonNull GoogleSignInAccount account) {
-        AuthCredential credential = GoogleAuthProvider.getCredential(account.getIdToken(), null);
 
-        firebaseAuth.signInWithCredential(credential)
-                .addOnCompleteListener(this, task -> {
-                    if (task.isSuccessful()) {
-                        Log.d(TAG, "Firebase authentication successful");
-                        FirebaseUser user = firebaseAuth.getCurrentUser();
-                        if (user != null) {
-                            saveUserToDatabase(user);
-                        }
+    private void authenticateWithFirebase(@NonNull GoogleSignInAccount account) {
+        String email = account.getEmail();
+        if (email == null) {
+            showToast("Google account does not contain a valid email.");
+            return;
+        }
+
+        // Step 1: Check how this email is registered
+        firebaseAuth.fetchSignInMethodsForEmail(email)
+                .addOnSuccessListener(result -> {
+                    if (result.getSignInMethods() != null &&
+                            result.getSignInMethods().contains("password")) {
+                        // 🚫 Email is registered using password
+                        progressDialog.dismiss();
+                        showToast("This email is already registered with a password. Please log in using email and password.");
                     } else {
-                        handleAuthenticationError("Firebase authentication failed", task.getException());
+                        // ✅ Safe to continue Google Sign-In
+                        AuthCredential credential = GoogleAuthProvider.getCredential(account.getIdToken(), null);
+
+                        firebaseAuth.signInWithCredential(credential)
+                                .addOnCompleteListener(this, task -> {
+                                    progressDialog.dismiss();
+                                    if (task.isSuccessful()) {
+                                        FirebaseUser user = firebaseAuth.getCurrentUser();
+                                        if (user != null) {
+                                            saveUserToDatabase(user);
+                                        }
+                                    } else {
+                                        handleAuthenticationError("Firebase authentication failed", task.getException());
+                                    }
+                                });
                     }
+                })
+                .addOnFailureListener(e -> {
+                    progressDialog.dismiss();
+                    handleAuthenticationError("Failed to verify sign-in method", e);
                 });
     }
+
 
     /**
      * Save user information to Firebase Database with null safety
@@ -261,6 +315,7 @@ public class SignInActivity extends AppCompatActivity {
             Users user = new Users();
             user.setUserId(firebaseUser.getUid());
             user.setUserName(firebaseUser.getDisplayName());
+            user.setAbout("Hey there! I am using MyChatApp.");
 
             // Handle potential null photo URL
             if (firebaseUser.getPhotoUrl() != null) {
@@ -345,24 +400,6 @@ public class SignInActivity extends AppCompatActivity {
         Intent intent = new Intent(this, SignUpActivity.class);
         startActivity(intent);
         finish();
-    }
-
-    /**
-     * Show progress dialog safely
-     */
-    private void showProgressDialog() {
-        if (!isFinishing() && !isDestroyed()) {
-            progressDialog.show(getSupportFragmentManager(), PROGRESS_DIALOG_TAG);
-        }
-    }
-
-    /**
-     * Dismiss progress dialog safely
-     */
-    private void dismissProgressDialog() {
-        if (progressDialog != null && progressDialog.isAdded()) {
-            progressDialog.dismiss();
-        }
     }
 
     /**

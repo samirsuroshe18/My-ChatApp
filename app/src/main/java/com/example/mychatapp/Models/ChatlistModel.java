@@ -43,7 +43,7 @@ public class ChatlistModel {
     }
 
     String about;
-    boolean isRead, isReadByUser;
+    boolean read, isReadByUser;
     String fcmToken;
 
     public boolean isReadByUser() {
@@ -58,11 +58,11 @@ public class ChatlistModel {
     public void setFcmToken(String fcmToken) { this.fcmToken = fcmToken; }
 
     public boolean isRead() {
-        return isRead;
+        return read;
     }
 
     public void setRead(boolean read) {
-        isRead = read;
+        this.read = read;
     }
 
     public long getReadCount() {
@@ -89,7 +89,7 @@ public class ChatlistModel {
         this.userId = userId;
         this.lastMessage = lastMessage;
         this.lastMsgTime = lastMsgTime;
-        this.isRead = isRead;
+        this.read = isRead;
         this.unreadCount = unreadCount;
     }
 

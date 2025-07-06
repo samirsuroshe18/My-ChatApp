@@ -95,6 +95,8 @@ public class UserProfileFragment extends Fragment {
 
                 database.getReference().child("Users").child(auth.getUid()).updateChildren(obj);
                 Toast.makeText(getContext(), "Changes Updated Successfully", Toast.LENGTH_SHORT).show();
+                binding.etStatus.clearFocus();
+                binding.etUsername.clearFocus();
             }
         });
 

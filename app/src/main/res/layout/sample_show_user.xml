@@ -8,8 +8,7 @@
     android:background="?android:attr/selectableItemBackground"
     android:clickable="true"
     android:focusable="true"
-    android:paddingVertical="8dp"
-    android:paddingBottom="12dp">
+    android:padding="16dp">
 
     <!-- Profile Image with Online Status Indicator -->
     <de.hdodenhof.circleimageview.CircleImageView
@@ -17,7 +16,6 @@
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:src="@drawable/profile_pic_avatar"
-        app:civ_border_color="?attr/colorSurfaceVariant"
         app:civ_border_width="1dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -46,7 +44,6 @@
         android:maxLines="1"
         android:text="@string/samir_suroshe"
         android:textAppearance="?attr/textAppearanceBodyLarge"
-        android:textColor="?attr/colorOnSurface"
         android:textStyle="bold"
         app:layout_constraintEnd_toStartOf="@id/timestampText"
         app:layout_constraintStart_toEndOf="@id/profileImage"
@@ -59,7 +56,6 @@
         android:layout_height="wrap_content"
         android:text="12:30 PM"
         android:textAppearance="?attr/textAppearanceBodySmall"
-        android:textColor="?attr/colorOnSurfaceVariant"
         android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/userName"
@@ -166,17 +162,5 @@
         app:layout_constraintEnd_toStartOf="@id/timestampText"
         app:layout_constraintTop_toTopOf="@id/timestampText"
         tools:visibility="visible" />
-
-    <!-- Divider Line -->
-    <View
-        android:id="@+id/dividerLine"
-        android:layout_width="0dp"
-        android:layout_height="0.5dp"
-        android:layout_marginStart="72dp"
-        android:layout_marginTop="12dp"
-        android:background="?attr/colorOutlineVariant"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/lastMessageContainer" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
