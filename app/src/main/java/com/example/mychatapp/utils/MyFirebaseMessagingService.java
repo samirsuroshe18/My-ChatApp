@@ -7,7 +7,6 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -17,11 +16,15 @@ import androidx.core.app.NotificationManagerCompat;
 
 import com.example.mychatapp.ChatDetailActivity;
 import com.example.mychatapp.R;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
     private static final String TAG = "MyFirebaseMessagingService";
+    private DatabaseReference mDatabase;
 
     @Override
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
@@ -38,6 +41,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         Log.d(TAG, "userName: "+ userName);
         Log.d(TAG, "textMessage: "+ textMessage);
 
+        mDatabase = FirebaseDatabase.getInstance().getReference();
+
         // Get currently open chat user (if any)
         SharedPreferences prefs = getSharedPreferences("chat_app", MODE_PRIVATE);
         String currentChatUserId = prefs.getString("currentChatUserId", null);
@@ -50,7 +55,34 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         }
     }
 
+    @Override
+    public void onNewToken(@NonNull String token) {
+        super.onNewToken(token);
+        Log.d(TAG, "Refreshed token: " + token);
+
+        // Send token to your server
+        sendTokenToServer(token);
+
+        // Save token locally (optional)
+//        saveTokenLocally(token);
+    }
+
+    private void sendTokenToServer(String token) {
+        String userId = FirebaseAuth.getInstance().getUid();
+        Log.d(TAG, "Sending token to server: " + token);
+
+        if (userId != null) {
+            mDatabase.child("Users").child(userId).child("FCMToken").setValue(token);
+        }
+    }
+
     private void showNotification(String userId, String title, String message, String profilePic) {
+        // Check if notifications are allowed
+        if (!PermissionUtils.canShowNotifications(this)) {
+            Log.d(TAG, "Notification permission not granted, skipping notification");
+            return;
+        }
+
         Intent intent = new Intent(this, ChatDetailActivity.class);
         intent.putExtra("userId", userId);
         intent.putExtra("userName", title);
@@ -70,36 +102,27 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 .setContentIntent(pendingIntent);
 
         NotificationManagerCompat manager = NotificationManagerCompat.from(this);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
+
+        // Double-check permission before showing notification
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                == PackageManager.PERMISSION_GRANTED) {
+            manager.notify((int) System.currentTimeMillis(), builder.build());
         }
-        manager.notify((int) System.currentTimeMillis(), builder.build());
     }
 
     private void createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            String channelId = "chat_channel";
-            String channelName = "Chat Notifications";
-            String channelDesc = "Notifications for incoming chat messages";
+        String channelId = "chat_channel";
+        String channelName = "Chat Notifications";
+        String channelDesc = "Notifications for incoming chat messages";
 
-            int importance = NotificationManager.IMPORTANCE_HIGH;
-            NotificationChannel channel = new NotificationChannel(channelId, channelName, importance);
-            channel.setDescription(channelDesc);
+        int importance = NotificationManager.IMPORTANCE_HIGH;
+        NotificationChannel channel = new NotificationChannel(channelId, channelName, importance);
+        channel.setDescription(channelDesc);
 
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            if (notificationManager != null) {
-                notificationManager.createNotificationChannel(channel);
-            }
+        NotificationManager notificationManager = getSystemService(NotificationManager.class);
+        if (notificationManager != null) {
+            notificationManager.createNotificationChannel(channel);
         }
     }
 
 }
-
-
