@@ -8,8 +8,7 @@
     android:background="?android:attr/selectableItemBackground"
     android:clickable="true"
     android:focusable="true"
-    android:paddingVertical="4dp"
-    android:paddingBottom="12dp">
+    android:padding="16dp">
 
     <!-- Profile Image with Online Status Indicator -->
     <de.hdodenhof.circleimageview.CircleImageView
@@ -17,22 +16,10 @@
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:src="@drawable/profile_pic_avatar"
-        app:civ_border_color="?attr/colorSurfaceVariant"
         app:civ_border_width="1dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
-
-    <!-- User Name -->
-    <TextView
-        android:id="@+id/lastMsgTime"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="15dp"
-        android:text="10:07 AM"
-        app:layout_constraintBottom_toBottomOf="@+id/userName"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/userName" />
 
     <TextView
         android:id="@+id/userName"
@@ -43,7 +30,6 @@
         android:maxLines="1"
         android:text="@string/samir_suroshe"
         android:textAppearance="?attr/textAppearanceBodyLarge"
-        android:textColor="?attr/colorOnSurface"
         android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@+id/lastMessageContainer"
         app:layout_constraintStart_toEndOf="@+id/profileImage"
@@ -71,21 +57,8 @@
             android:maxLines="1"
             android:ellipsize="end"
             android:textAppearance="?attr/textAppearanceBodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            tools:text="Hey! How are you doing today? Hey! How are you doing today?" />
+            tools:text="Hey! How are you doing today?" />
 
     </LinearLayout>
-
-    <!-- Divider Line -->
-    <View
-        android:id="@+id/dividerLine"
-        android:layout_width="0dp"
-        android:layout_height="0.5dp"
-        android:layout_marginStart="72dp"
-        android:layout_marginTop="12dp"
-        android:background="?attr/colorOutlineVariant"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/lastMessageContainer" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

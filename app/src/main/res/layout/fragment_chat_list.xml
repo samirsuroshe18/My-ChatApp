@@ -6,7 +6,6 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorSurface"
     tools:context=".Fragments.HomeFragment">
 
     <!-- App Bar with elevated design -->
@@ -14,7 +13,6 @@
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/colorSurface"
         app:elevation="0dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -65,10 +63,7 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
             android:checked="true"
-            android:text="All"
-            android:textColor="?attr/colorOnPrimary"
-            app:chipBackgroundColor="?attr/colorPrimary"
-            app:chipStrokeColor="?attr/colorPrimary" />
+            android:text="All" />
 
         <!-- Unread filter -->
         <com.google.android.material.chip.Chip
@@ -77,9 +72,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
-            android:text="Unread"
-            app:chipBackgroundColor="?attr/colorSurfaceVariant"
-            app:chipStrokeColor="?attr/colorOutline" />
+            android:text="Unread" />
 
     </LinearLayout>
 
@@ -104,9 +97,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingHorizontal="20dp"
-                android:paddingBottom="20dp">
+                android:orientation="vertical">
 
                 <!-- Include multiple shimmer chat items -->
                 <include layout="@layout/shimmer_chat_item" />
@@ -136,36 +127,14 @@
 
     </com.facebook.shimmer.ShimmerFrameLayout>
 
-    <!-- Main content area (initially hidden) -->
-    <androidx.core.widget.NestedScrollView
-        android:id="@+id/scrollView"
+    <!-- Chat list RecyclerView -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/chatListItem"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:fillViewport="true"
-        android:layout_marginTop="5dp"
         android:visibility="gone"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
         app:layout_constraintTop_toBottomOf="@+id/statusContainer"
-        app:layout_constraintBottom_toBottomOf="parent">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <!-- Chat list RecyclerView -->
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/chatListItem"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:clipToPadding="false"
-                android:nestedScrollingEnabled="false"
-                android:paddingHorizontal="20dp"
-                android:paddingBottom="20dp" />
-
-        </LinearLayout>
-
-    </androidx.core.widget.NestedScrollView>
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
     <!-- Floating Action Button for new chat -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -174,8 +143,6 @@
         android:layout_height="wrap_content"
         android:layout_margin="24dp"
         android:src="@drawable/ic_add"
-        app:backgroundTint="?attr/colorPrimary"
-        app:tint="?attr/colorOnPrimary"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:elevation="6dp"

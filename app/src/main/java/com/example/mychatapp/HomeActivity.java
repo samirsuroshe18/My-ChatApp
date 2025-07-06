@@ -1,105 +1,156 @@
 package com.example.mychatapp;
+
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
+
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
+
 import com.example.mychatapp.Fragments.HomeFragment;
 import com.example.mychatapp.Fragments.UserProfileFragment;
 import com.example.mychatapp.databinding.ActivityHomeBinding;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 public class HomeActivity extends AppCompatActivity {
-    ActivityHomeBinding binding;
-    FirebaseAuth auth;
+    private static final String TAG = "HomeActivity";
+    private static final String STATUS_ONLINE = "online";
+    private static final String BUNDLE_KEY_ACTIVE_FRAGMENT = "active_fragment";
+
+    // View binding
+    private ActivityHomeBinding binding;
+
+    // Firebase
+    private FirebaseAuth auth;
+    private DatabaseReference userStatusRef;
+    private String senderId;
+
+    // Fragments
     private HomeFragment homeFragment;
     private UserProfileFragment userProfileFragment;
     private Fragment activeFragment;
-    String senderId;
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        setUserStatus("online");
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-    }
-
-    private void setUserStatus(String status) {
-        if (senderId != null) {
-            FirebaseDatabase.getInstance()
-                    .getReference("Users")
-                    .child(senderId)
-                    .child("status")
-                    .setValue(status);
-        }
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
+
+        // Initialize view binding
         binding = ActivityHomeBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        // Enable edge-to-edge display
+        EdgeToEdge.enable(this);
+        setupWindowInsets();
+
+        // Initialize Firebase and user data
+        if (!initializeFirebase()) {
+            finish();
+            return;
+        }
+
+        // Initialize fragments
+        initializeFragments();
+
+        // Setup bottom navigation
+        setupBottomNavigation();
+
+        // Setup user status tracking
+        setupUserStatusTracking();
+
+        // Load initial fragment
+        loadInitialFragment(savedInstanceState);
+    }
+
+    private void setupWindowInsets() {
         ViewCompat.setOnApplyWindowInsetsListener(binding.main, (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+    }
 
-        // Initialize fragments once
+    private boolean initializeFirebase() {
         auth = FirebaseAuth.getInstance();
-        senderId = auth.getUid();
-        homeFragment = new HomeFragment();
-        userProfileFragment = new UserProfileFragment();
+        FirebaseUser currentUser = auth.getCurrentUser();
 
-        binding.bottomNavigationView.setOnItemSelectedListener(new BottomNavigationView.OnItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                Fragment selectedFragment = null;
-                int id = item.getItemId();
+        if (currentUser == null) {
+            Log.e(TAG, "User not authenticated");
+            return false;
+        }
 
-                if (id == R.id.navigation_home) {
-                    selectedFragment = homeFragment;
-                } else if (id == R.id.navigation_dashboard) {
-                    selectedFragment = userProfileFragment;
-                }
-
-                if (selectedFragment != null && selectedFragment != activeFragment) {
-                    showFragment(selectedFragment);
-                    return true;
-                }
-                return false;
-            }
-        });
-
-        DatabaseReference ref = FirebaseDatabase.getInstance()
+        senderId = currentUser.getUid();
+        userStatusRef = FirebaseDatabase.getInstance()
                 .getReference("Users")
                 .child(senderId)
                 .child("status");
 
-        ref.onDisconnect().setValue(String.valueOf(System.currentTimeMillis()));
+        return true;
+    }
 
-        // Load default fragment
-        if (savedInstanceState == null) {
-            showFragment(homeFragment);
-            binding.bottomNavigationView.setSelectedItemId(R.id.navigation_home);
+    private void initializeFragments() {
+        homeFragment = new HomeFragment();
+        userProfileFragment = new UserProfileFragment();
+    }
+
+    private void setupBottomNavigation() {
+        binding.bottomNavigationView.setOnItemSelectedListener(this::onNavigationItemSelected);
+    }
+
+    private boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        Fragment selectedFragment = getFragmentForMenuItem(item.getItemId());
+
+        if (selectedFragment != null && selectedFragment != activeFragment) {
+            showFragment(selectedFragment);
+            return true;
+        }
+        return false;
+    }
+
+    @Nullable
+    private Fragment getFragmentForMenuItem(int itemId) {
+        if (itemId == R.id.navigation_home) {
+            return homeFragment;
+        } else if (itemId == R.id.navigation_dashboard) {
+            return userProfileFragment;
+        }
+        return null;
+    }
+
+    private void setupUserStatusTracking() {
+        if (userStatusRef != null) {
+            // Set offline status when connection is lost
+            userStatusRef.onDisconnect().setValue(System.currentTimeMillis());
         }
     }
 
-    private void showFragment(Fragment fragment) {
+    private void loadInitialFragment(@Nullable Bundle savedInstanceState) {
+        if (savedInstanceState == null) {
+            showFragment(homeFragment);
+            binding.bottomNavigationView.setSelectedItemId(R.id.navigation_home);
+        } else {
+            // Handle fragment restoration if needed
+            restoreFragmentState(savedInstanceState);
+        }
+    }
+
+    private void restoreFragmentState(@NonNull Bundle savedInstanceState) {
+        // You can implement fragment state restoration here if needed
+        // For now, just load the default fragment
+        showFragment(homeFragment);
+        binding.bottomNavigationView.setSelectedItemId(R.id.navigation_home);
+    }
+
+    private void showFragment(@NonNull Fragment fragment) {
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
 
         // Hide current active fragment
@@ -119,9 +170,36 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        setUserStatus(STATUS_ONLINE);
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
-        long timestamp = System.currentTimeMillis();
-        setUserStatus(String.valueOf(timestamp));
+
+        // Set offline timestamp
+        setUserStatus(String.valueOf(System.currentTimeMillis()));
+
+        // Clean up binding
+        binding = null;
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        // Save active fragment state if needed
+        if (activeFragment != null) {
+            outState.putString(BUNDLE_KEY_ACTIVE_FRAGMENT, activeFragment.getClass().getSimpleName());
+        }
+    }
+
+    private void setUserStatus(@NonNull String status) {
+        if (userStatusRef != null) {
+            userStatusRef.setValue(status)
+                    .addOnFailureListener(e -> Log.e(TAG, "Failed to update user status", e));
+        }
     }
 }

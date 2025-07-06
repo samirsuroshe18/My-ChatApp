@@ -2,7 +2,6 @@ package com.example.mychatapp.Adapters;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.graphics.PorterDuff;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -10,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
@@ -18,44 +18,66 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.mychatapp.Models.ChatItem;
 import com.example.mychatapp.Models.MessageModel;
 import com.example.mychatapp.R;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
 public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+    private static final String TAG = "ChatAdapter";
     private static final int SENDER_VIEW_TYPE = 1;
     private static final int RECEIVER_VIEW_TYPE = 2;
     private static final int DATE_VIEW_TYPE = 3;
-    String recId;
-    private final List<ChatItem> chatItems;
 
-    public ChatAdapter(ArrayList<ChatItem> chatItems, String recId) {
-        this.recId = recId;
+    private final String recId;
+    private final List<ChatItem> chatItems;
+    private final FirebaseAuth firebaseAuth;
+    private final DatabaseReference databaseReference;
+    private final SimpleDateFormat timeFormatter;
+
+    // Interface for handling delete operations
+    public interface OnMessageDeleteListener {
+        void onMessageDeleted(String messageId);
+        void onDeleteError(String error);
+    }
+
+    private OnMessageDeleteListener deleteListener;
+
+    public ChatAdapter(List<ChatItem> chatItems, String recId) {
+        Log.d(TAG, "Receiver ID : "+recId);
         this.chatItems = chatItems;
+        this.recId = recId;
+        this.firebaseAuth = FirebaseAuth.getInstance();
+        this.databaseReference = FirebaseDatabase.getInstance().getReference();
+        this.timeFormatter = new SimpleDateFormat("hh:mm a", Locale.getDefault());
+    }
+
+    public void setOnMessageDeleteListener(OnMessageDeleteListener listener) {
+        this.deleteListener = listener;
     }
 
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        if (viewType == SENDER_VIEW_TYPE) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.sample_sender, parent, false);
-            return new SenderViewHolder(view);
-        } else if (viewType == RECEIVER_VIEW_TYPE) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.sample_reciever, parent, false);
-            return new ReceiverViewHolder(view);
-        } else {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_date_header, parent, false);
-            return new DateViewHolder(view);
+        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+
+        switch (viewType) {
+            case SENDER_VIEW_TYPE:
+                return new SenderViewHolder(inflater.inflate(R.layout.sample_sender, parent, false));
+            case RECEIVER_VIEW_TYPE:
+                return new ReceiverViewHolder(inflater.inflate(R.layout.sample_reciever, parent, false));
+            case DATE_VIEW_TYPE:
+                return new DateViewHolder(inflater.inflate(R.layout.item_date_header, parent, false));
+            default:
+                throw new IllegalArgumentException("Unknown view type: " + viewType);
         }
     }
 
@@ -64,13 +86,15 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         ChatItem item = chatItems.get(position);
         if (item.getType() == ChatItem.TYPE_DATE) {
             return DATE_VIEW_TYPE;
+        }
+
+        MessageModel msg = item.getMessageModel();
+        FirebaseUser currentUser = firebaseAuth.getCurrentUser();
+
+        if (currentUser != null && msg.getSenderId().equals(currentUser.getUid())) {
+            return SENDER_VIEW_TYPE;
         } else {
-            MessageModel msg = item.getMessageModel();
-            if (msg.getuId().equals(FirebaseAuth.getInstance().getUid())) {
-                return SENDER_VIEW_TYPE;
-            } else {
-                return RECEIVER_VIEW_TYPE;
-            }
+            return RECEIVER_VIEW_TYPE;
         }
     }
 
@@ -79,126 +103,231 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         ChatItem item = chatItems.get(position);
 
         if (holder instanceof DateViewHolder) {
-            ((DateViewHolder) holder).dateText.setText(item.getDateHeader());
+            bindDateViewHolder((DateViewHolder) holder, item);
         } else {
             MessageModel msg = item.getMessageModel();
-
-            holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
-                @Override
-                public boolean onLongClick(View v) {
-                    new AlertDialog.Builder(holder.itemView.getContext())
-                            .setTitle("Delete")
-                            .setMessage("Are you sure you want to delete this message")
-                            .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    String userId = FirebaseAuth.getInstance().getUid();
-                                    if (userId == null) {
-                                        // User is not authenticated - shouldn't happen in chat screen
-                                        Log.e("ChatAdapter", "User not authenticated while trying to delete message");
-                                        dialog.dismiss();
-                                        return;
-                                    }
-                                    FirebaseDatabase database = FirebaseDatabase.getInstance();
-                                    String senderRoom = userId + recId;
-                                    String receiverRoom = recId + userId;
-                                    database.getReference().child("chats").child(userId).child(senderRoom).child(msg.getMessageId()).setValue(null)
-                                            .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                                @Override
-                                                public void onComplete(@NonNull Task<Void> task) {
-                                                    // ✅ Step 2: Get the last message remaining
-                                                    database.getReference().child("chats")
-                                                            .child(userId)
-                                                            .child(senderRoom)
-                                                            .limitToLast(1)
-                                                            .addListenerForSingleValueEvent(new ValueEventListener() {
-                                                                @Override
-                                                                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                                                    String lastMessage = "";
-//                                                                    long timestamp = 0;
-
-                                                                    for (DataSnapshot messageSnap : snapshot.getChildren()) {
-                                                                        lastMessage = messageSnap.child("message").getValue(String.class);
-//                                                                        Long ts = messageSnap.child("timestamp").getValue(Long.class);
-//                                                                        timestamp = ts != null ? ts : 0;
-                                                                    }
-
-                                                                    // ✅ Step 3: Update ChatList
-                                                                    database.getReference().child("ChatList")
-                                                                            .child(userId)
-                                                                            .child(recId)
-                                                                            .child("lastMessage")
-                                                                            .setValue(lastMessage).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                                                                @Override
-                                                                                public void onComplete(@NonNull Task<Void> task) {
-                                                                                    database.getReference().child("chats")
-                                                                                            .child(recId)
-                                                                                            .child(receiverRoom)
-                                                                                            .limitToLast(1)
-                                                                                            .addListenerForSingleValueEvent(new ValueEventListener() {
-                                                                                                @Override
-                                                                                                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                                                                                    String lastMessage = "";
-                                                                                                    // long timestamp = 0;
-
-                                                                                                    for (DataSnapshot messageSnap : snapshot.getChildren()) {
-                                                                                                        lastMessage = messageSnap.child("message").getValue(String.class);
-                                                                                                        // Long ts = messageSnap.child("timestamp").getValue(Long.class);
-                                                                                                        // timestamp = ts != null ? ts : 0;
-                                                                                                    }
-
-                                                                                                    database.getReference().child("ChatList")
-                                                                                                            .child(recId)
-                                                                                                            .child(userId)
-                                                                                                            .child("lastMessage")
-                                                                                                            .setValue(lastMessage);
-                                                                                                }
-
-                                                                                                @Override
-                                                                                                public void onCancelled(@NonNull DatabaseError error) {
-
-                                                                                                }
-                                                                                            });
-                                                                                }
-                                                                            });
-                                                                }
-
-                                                                @Override
-                                                                public void onCancelled(@NonNull DatabaseError error) {
-
-                                                                }
-                                                            });
-                                                }
-                                            });
-                                }
-                            })
-                            .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    dialog.dismiss();
-                                }
-                            })
-                            .show();
-                    return true;
-                }
-            });
+            setupMessageLongClickListener(holder, msg, position, holder.itemView.getContext());
 
             if (holder instanceof SenderViewHolder) {
-                ((SenderViewHolder) holder).senderMsg.setText(msg.getMessage());
-                ((SenderViewHolder) holder).senderTime.setText(formatTime(msg.getTimestamp()));
-                if (msg.isSeen()) {
-                    ((SenderViewHolder) holder).messageStatus.setImageResource(R.drawable.double_tick);
-                    ((SenderViewHolder) holder).messageStatus.setColorFilter(ContextCompat.getColor(holder.itemView.getContext(), R.color.blue), PorterDuff.Mode.SRC_IN);
-                } else {
-                    ((SenderViewHolder) holder).messageStatus.setImageResource(R.drawable.signle_tick);
-                    ((SenderViewHolder) holder).messageStatus.setColorFilter(ContextCompat.getColor(holder.itemView.getContext(), R.color.gray), PorterDuff.Mode.SRC_IN);
-                }
-
+                bindSenderViewHolder((SenderViewHolder) holder, msg);
             } else if (holder instanceof ReceiverViewHolder) {
-                ((ReceiverViewHolder) holder).receiverMsg.setText(msg.getMessage());
-                ((ReceiverViewHolder) holder).receiverTime.setText(formatTime(msg.getTimestamp()));
+                bindReceiverViewHolder((ReceiverViewHolder) holder, msg);
             }
         }
+    }
+
+    private void bindDateViewHolder(DateViewHolder holder, ChatItem item) {
+        holder.dateText.setText(item.getDateHeader());
+    }
+
+    private void bindSenderViewHolder(SenderViewHolder holder, MessageModel msg) {
+        holder.senderMsg.setText(msg.getMessage());
+        holder.senderTime.setText(formatTime(msg.getTimestamp()));
+
+        Log.d(TAG, "Message status: " + msg.isSeen());
+        Log.d(TAG, "Message status: " + msg.getMessage());
+
+        // Update message status
+        if (msg.isSeen()) {
+            holder.messageStatus.setImageResource(R.drawable.double_tick);
+            holder.messageStatus.setColorFilter(
+                    ContextCompat.getColor(holder.itemView.getContext(), R.color.blue),
+                    PorterDuff.Mode.SRC_IN
+            );
+        } else {
+            holder.messageStatus.setImageResource(R.drawable.signle_tick);
+            holder.messageStatus.setColorFilter(
+                    ContextCompat.getColor(holder.itemView.getContext(), R.color.gray),
+                    PorterDuff.Mode.SRC_IN
+            );
+        }
+    }
+
+    private void bindReceiverViewHolder(ReceiverViewHolder holder, MessageModel msg) {
+        holder.receiverMsg.setText(msg.getMessage());
+        holder.receiverTime.setText(formatTime(msg.getTimestamp()));
+    }
+
+    private void setupMessageLongClickListener(RecyclerView.ViewHolder holder, MessageModel msg, int position, Context context) {
+        holder.itemView.setOnLongClickListener(v -> {
+            showDeleteDialog(msg, position, context);
+            return true;
+        });
+    }
+
+    private void showDeleteDialog(MessageModel msg, int position, Context context) {
+        new AlertDialog.Builder(context)
+                .setTitle("Delete Message")
+                .setMessage("Are you sure you want to delete this message?")
+                .setPositiveButton("Delete", (dialog, which) -> deleteMessage(msg, position, context))
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+
+    private void deleteMessage(MessageModel msg, int position, Context context) {
+        FirebaseUser currentUser = firebaseAuth.getCurrentUser();
+        if (currentUser == null) {
+            Log.e(TAG, "User not authenticated while trying to delete message");
+            showError("Authentication error", context);
+            return;
+        }
+
+        String userId = currentUser.getUid();
+        String senderRoom = userId + recId;
+        String receiverRoom = recId + userId;
+
+        // Delete from sender's chat
+        databaseReference.child("chats")
+                .child(userId)
+                .child(senderRoom)
+                .child(msg.getMessageId())
+                .removeValue()
+                .addOnSuccessListener(aVoid -> {
+                    Log.d(TAG, "Message deleted successfully");
+                    updateLastMessage(userId, senderRoom, receiverRoom);
+
+                    // Notify listener
+                    if (deleteListener != null) {
+                        deleteListener.onMessageDeleted(msg.getMessageId());
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to delete message", e);
+                    showError("Failed to delete message", context);
+
+                    if (deleteListener != null) {
+                        deleteListener.onDeleteError(e.getMessage());
+                    }
+                });
+    }
+
+    private void updateLastMessage(String userId, String senderRoom, String receiverRoom) {
+        // Get the last message from sender's chat
+        databaseReference.child("chats")
+                .child(userId)
+                .child(senderRoom)
+                .limitToLast(1)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        String lastMessage = "";
+
+                        for (DataSnapshot messageSnap : snapshot.getChildren()) {
+                            String message = messageSnap.child("message").getValue(String.class);
+                            if (message != null) {
+                                lastMessage = message;
+                            }
+                        }
+
+                        // Update ChatList for sender
+                        updateChatList(userId, recId, lastMessage);
+
+                        // Update ChatList for receiver
+                        updateReceiverLastMessage(userId, receiverRoom);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Log.e(TAG, "Failed to get last message", error.toException());
+                    }
+                });
+    }
+
+//    private void updateChatList(String userId, String chatId, String lastMessage) {
+//        databaseReference.child("ChatList")
+//                .child(userId)
+//                .child(chatId)
+//                .child("lastMessage")
+//                .setValue(lastMessage)
+//                .addOnFailureListener(e ->
+//                        Log.e(TAG, "Failed to update ChatList", e)
+//                );
+//    }
+
+    private void updateChatList(String userId, String chatPartnerId, String lastMessage) {
+        if (userId == null || chatPartnerId == null) {
+            Log.e(TAG, "updateChatList failed: userId or chatPartnerId is null. userId=" + userId + ", chatId=" + chatPartnerId);
+            return;
+        }
+
+        databaseReference.child("ChatList")
+                .child(userId)
+                .child(chatPartnerId)
+                .child("lastMessage")
+                .setValue(lastMessage)
+                .addOnFailureListener(e ->
+                        Log.e(TAG, "Failed to update ChatList", e)
+                );
+    }
+
+//    private void updateReceiverLastMessage(String userId, String receiverRoom) {
+//        databaseReference.child("chats")
+//                .child(recId)
+//                .child(receiverRoom)
+//                .limitToLast(1)
+//                .addListenerForSingleValueEvent(new ValueEventListener() {
+//                    @Override
+//                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+//                        String lastMessage = "";
+//
+//                        for (DataSnapshot messageSnap : snapshot.getChildren()) {
+//                            String message = messageSnap.child("message").getValue(String.class);
+//                            if (message != null) {
+//                                lastMessage = message;
+//                            }
+//                        }
+//
+//                        // Update ChatList for receiver
+//                        updateChatList(recId, userId, lastMessage);
+//                    }
+//
+//                    @Override
+//                    public void onCancelled(@NonNull DatabaseError error) {
+//                        Log.e(TAG, "Failed to get receiver's last message", error.toException());
+//                    }
+//                });
+//    }
+
+    private void updateReceiverLastMessage(String userId, String receiverRoom) {
+        if (userId == null || receiverRoom == null || recId == null) {
+            Log.e(TAG, "updateReceiverLastMessage: userId, recId, or receiverRoom is null");
+            return;
+        }
+
+        databaseReference.child("chats")
+                .child(recId)
+                .child(receiverRoom)
+                .limitToLast(1)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        String lastMessage = "";
+
+                        for (DataSnapshot messageSnap : snapshot.getChildren()) {
+                            String message = messageSnap.child("message").getValue(String.class);
+                            if (message != null) {
+                                lastMessage = message;
+                            }
+                        }
+
+                        // Again, double-check here
+                        if (recId != null && userId != null) {
+                            updateChatList(recId, userId, lastMessage);
+                        } else {
+                            Log.e(TAG, "Null userId or recId when updating receiver's ChatList");
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Log.e(TAG, "Failed to get receiver's last message", error.toException());
+                    }
+                });
+    }
+
+
+    private void showError(String message, Context context) {
+        Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -207,9 +336,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     private String formatTime(long timestamp) {
-        return new SimpleDateFormat("hh:mm a", Locale.getDefault()).format(new Date(timestamp));
+        return timeFormatter.format(new Date(timestamp));
     }
 
+    // ViewHolder classes
     static class DateViewHolder extends RecyclerView.ViewHolder {
         TextView dateText;
 
@@ -222,9 +352,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     static class ReceiverViewHolder extends RecyclerView.ViewHolder {
         TextView receiverMsg, receiverTime;
 
-        public ReceiverViewHolder(@NonNull View itemView) {
+        ReceiverViewHolder(@NonNull View itemView) {
             super(itemView);
-
             receiverMsg = itemView.findViewById(R.id.recieverText);
             receiverTime = itemView.findViewById(R.id.recieverTime);
         }
@@ -234,9 +363,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         TextView senderMsg, senderTime;
         ImageView messageStatus;
 
-        public SenderViewHolder(@NonNull View itemView) {
+        SenderViewHolder(@NonNull View itemView) {
             super(itemView);
-
             senderMsg = itemView.findViewById(R.id.senderText);
             senderTime = itemView.findViewById(R.id.senderTime);
             messageStatus = itemView.findViewById(R.id.messageStatus);

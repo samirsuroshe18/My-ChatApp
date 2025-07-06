@@ -7,8 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context=".ChatDetailActivity"
-    android:background="?attr/colorSurface">
+    tools:context=".ChatDetailActivity">
 
     <!-- App Bar -->
     <com.google.android.material.appbar.AppBarLayout
@@ -23,9 +22,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
-            app:navigationIcon="@drawable/arrow_back_icon"
-            app:navigationIconTint="?attr/colorOnPrimary">
+            app:navigationIcon="@drawable/arrow_back_icon">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
@@ -33,12 +30,10 @@
 
                 <de.hdodenhof.circleimageview.CircleImageView
                     android:id="@+id/profileImage"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:padding="5dp"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
                     android:src="@drawable/profile_pic_avatar"
-                    app:civ_border_color="?attr/colorOnPrimary"
-                    app:civ_border_width="2dp"
+                    app:civ_border_width="1dp"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintBottom_toBottomOf="parent" />
@@ -50,7 +45,6 @@
                     android:layout_marginStart="8dp"
                     android:layout_marginTop="4dp"
                     android:text="Username"
-                    android:textColor="?attr/colorOnPrimary"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     app:layout_constraintStart_toEndOf="@+id/profileImage"
@@ -60,45 +54,40 @@
                     android:id="@+id/userStatusChat"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Last seen: 5 minutes ago"
-                    android:textColor="?attr/colorOnPrimary"
                     android:textSize="12sp"
                     app:layout_constraintStart_toStartOf="@+id/userNameChat"
                     app:layout_constraintTop_toBottomOf="@+id/userNameChat" />
 
                 <ImageView
-                    android:id="@+id/imageView5"
+                    android:id="@+id/callBtn"
                     android:layout_width="25dp"
                     android:layout_height="25dp"
                     android:layout_marginEnd="16dp"
-                    app:layout_constraintEnd_toStartOf="@+id/imageView4"
+                    app:layout_constraintEnd_toStartOf="@+id/videoBtn"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:tint="?attr/colorOnPrimary"
                     app:srcCompat="@drawable/call_icon" />
 
                 <ImageView
-                    android:id="@+id/imageView4"
+                    android:id="@+id/videoBtn"
                     android:layout_width="25dp"
                     android:layout_height="25dp"
                     android:layout_marginStart="16dp"
-                    app:layout_constraintStart_toEndOf="@+id/imageView5"
+                    app:layout_constraintStart_toEndOf="@+id/callBtn"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:tint="?attr/colorOnPrimary"
                     app:srcCompat="@drawable/video_call_icon" />
 
                 <ImageView
-                    android:id="@+id/imageView6"
+                    android:id="@+id/moreVert"
                     android:layout_width="25dp"
                     android:layout_height="25dp"
                     android:layout_marginStart="16dp"
                     android:layout_marginEnd="24dp"
-                    app:layout_constraintStart_toEndOf="@+id/imageView4"
+                    app:layout_constraintStart_toEndOf="@+id/videoBtn"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:tint="?attr/colorOnPrimary"
                     app:srcCompat="@drawable/menu_icon" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
@@ -123,7 +112,6 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:padding="10dp"
-        android:background="?attr/colorSurface"
         android:gravity="center_vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"

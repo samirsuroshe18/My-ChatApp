@@ -14,7 +14,6 @@
         android:layout_width="0dp"
         android:layout_height="?attr/actionBarSize"
         app:navigationIcon="@drawable/arrow_back_icon"
-        app:navigationIconTint="?attr/colorOnPrimary"
         app:title="Select Contact"
         app:subtitle="30 contacts"
         app:layout_constraintTop_toTopOf="parent"
@@ -32,8 +31,7 @@
         android:src="@drawable/refresh"
         app:layout_constraintBottom_toBottomOf="@+id/toolbar"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:tint="?attr/colorOnPrimary" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <!-- Circular progress shown in same position -->
     <com.google.android.material.progressindicator.CircularProgressIndicator

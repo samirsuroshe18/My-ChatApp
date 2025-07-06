@@ -1,157 +1,7 @@
-//package com.example.mychatapp.Adapters;
-//
-//import android.app.AlertDialog;
-//import android.content.Context;
-//import android.content.DialogInterface;
-//import android.content.Intent;
-//import android.util.Log;
-//import android.view.LayoutInflater;
-//import android.view.View;
-//import android.view.ViewGroup;
-//import android.widget.ImageView;
-//import android.widget.TextView;
-//
-//import androidx.annotation.NonNull;
-//import androidx.recyclerview.widget.RecyclerView;
-//
-//import com.example.mychatapp.ChatDetailActivity;
-//import com.example.mychatapp.Models.ChatlistModel;
-//import com.example.mychatapp.R;
-//import com.example.mychatapp.utils.DateFormatter;
-//import com.google.android.gms.tasks.OnCompleteListener;
-//import com.google.android.gms.tasks.Task;
-//import com.google.firebase.auth.FirebaseAuth;
-//import com.google.firebase.database.FirebaseDatabase;
-//import com.squareup.picasso.Picasso;
-//
-//import java.util.ArrayList;
-//import java.util.Date;
-//
-//public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.ViewHolder>{
-//    public static final String TAG = "UsersAdapter";
-//    ArrayList<ChatlistModel> list;
-//    Context context;
-//    FirebaseAuth auth = FirebaseAuth.getInstance();
-//
-//    public UsersAdapter(ArrayList<ChatlistModel> list, Context context) {
-//        this.list = list;
-//        this.context = context;
-//    }
-//
-//    @NonNull
-//    @Override
-//    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-//        View view = LayoutInflater.from(context).inflate(R.layout.sample_show_user, parent, false);
-//        return new ViewHolder(view);
-//    }
-//
-//    @Override
-//    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-//        ChatlistModel users = list.get(position);
-//
-//        Picasso.get().load(users.getProfilepic()).placeholder(R.drawable.profile_pic_avatar).into(holder.image);
-//        holder.userName.setText(users.getUserName());
-//        holder.lastMessage.setText(users.getLastMessage());
-//        holder.timestampText.setText(DateFormatter.formatMessageTime(new Date(users.getLastMsgTime())));
-//
-//        Log.d(TAG, "onBindViewHolder: If condition "+users.getLastMessageBy().equals(auth.getUid()));
-//        Log.d(TAG, "onBindViewHolder: "+auth.getUid());
-//        Log.d(TAG, "onBindViewHolder: "+users.getLastMessageBy());
-//        Log.d(TAG, "onBindViewHolder: "+users.getReadCount());
-//
-//        if(users.getLastMessageBy().equals(auth.getUid())){
-//            if (users.getReadCount() > 0) {
-//                holder.messageStatusIcon.setVisibility(View.GONE);
-//            }else if (users.isRead()) {
-//                Log.d(TAG, "onBindViewHolder: It's been read");
-//                holder.messageStatusIcon.setVisibility(View.VISIBLE);
-//                holder.messageStatusIcon.setImageResource(R.drawable.task_alt);
-//            }else {
-//                Log.d(TAG, "onBindViewHolder: It's been not read");
-//                holder.messageStatusIcon.setVisibility(View.VISIBLE);
-//                holder.messageStatusIcon.setImageResource(R.drawable.check);
-//            }
-//        }else{
-//            if(!users.isRead() && users.getReadCount() > 0){
-//                holder.unreadBadge.setVisibility(View.VISIBLE);
-//                holder.unreadBadge.setText(String.valueOf(users.getReadCount()));
-//            }
-//        }
-//
-//        holder.itemView.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                Intent intent = new Intent(context, ChatDetailActivity.class);
-//                intent.putExtra("userId", users.getUserId().toString());
-//                intent.putExtra("profilePic", users.getProfilepic());
-//                intent.putExtra("userName", users.getUserName());
-//                context.startActivity(intent);
-//            }
-//        });
-//
-//        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
-//            @Override
-//            public boolean onLongClick(View v) {
-//                new AlertDialog.Builder(context)
-//                        .setTitle("Delete")
-//                        .setMessage("Are you sure you want to delete this message")
-//                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-//                            @Override
-//                            public void onClick(DialogInterface dialog, int which) {
-//                                String userId = FirebaseAuth.getInstance().getUid();
-//                                String recId = users.getUserId();
-//                                FirebaseDatabase database = FirebaseDatabase.getInstance();
-//                                String senderRoom = userId + recId;
-//                                database.getReference().child("ChatList").child(userId).child(recId).setValue(null).addOnCompleteListener(new OnCompleteListener<Void>() {
-//                                    @Override
-//                                    public void onComplete(@NonNull Task<Void> task) {
-//                                        FirebaseDatabase database = FirebaseDatabase.getInstance();
-//                                        String senderRoom = userId + recId;
-//                                        database.getReference().child("chats").child(userId).child(senderRoom).setValue(null);
-//                                    }
-//                                });
-//                            }
-//                        })
-//                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
-//                            @Override
-//                            public void onClick(DialogInterface dialog, int which) {
-//                                dialog.dismiss();
-//                            }
-//                        })
-//                        .show();
-//                return true;
-//            }
-//        });
-//
-//    }
-//
-//    @Override
-//    public int getItemCount() {
-//        return list.size();
-//    }
-//
-//    static class ViewHolder extends RecyclerView.ViewHolder{
-//        ImageView image, messageStatusIcon;
-//        TextView userName,lastMessage, timestampText, unreadBadge;
-//        public ViewHolder(@NonNull View itemView) {
-//            super(itemView);
-//
-//            image = itemView.findViewById(R.id.profileImage);
-//            messageStatusIcon = itemView.findViewById(R.id.messageStatusIcon);
-//            userName = itemView.findViewById(R.id.userName);
-//            lastMessage = itemView.findViewById(R.id.aboutMessage);
-//            timestampText = itemView.findViewById(R.id.timestampText);
-//            unreadBadge = itemView.findViewById(R.id.unreadBadge);
-//        }
-//    }
-//}
-
-
 package com.example.mychatapp.Adapters;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.PorterDuff;
 import android.util.Log;
@@ -169,149 +19,261 @@ import com.example.mychatapp.ChatDetailActivity;
 import com.example.mychatapp.Models.ChatlistModel;
 import com.example.mychatapp.R;
 import com.example.mychatapp.utils.DateFormatter;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
-public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.ViewHolder>{
-    public static final String TAG = "UsersAdapter";
-    ArrayList<ChatlistModel> list;
-    Context context;
-    FirebaseAuth auth = FirebaseAuth.getInstance();
+public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.ViewHolder> {
+    private static final String TAG = "UsersAdapter";
 
-    public UsersAdapter(ArrayList<ChatlistModel> list, Context context) {
-        this.list = list;
-        this.context = context;
+    // Firebase references - reused to avoid multiple instance creation
+    private final FirebaseAuth auth;
+    private final DatabaseReference databaseRef;
+    private final String currentUserId;
+
+    private final ArrayList<ChatlistModel> chatList;
+
+    // Interface for handling adapter interactions
+    public interface OnChatInteractionListener {
+        void onChatClicked(ChatlistModel chat);
+        void onChatDeleted(ChatlistModel chat);
+    }
+
+    private OnChatInteractionListener interactionListener;
+
+    public UsersAdapter(ArrayList<ChatlistModel> chatList) {
+        this.chatList = chatList;
+        this.auth = FirebaseAuth.getInstance();
+        this.databaseRef = FirebaseDatabase.getInstance().getReference();
+        this.currentUserId = auth.getUid();
+    }
+
+    public void setOnChatInteractionListener(OnChatInteractionListener listener) {
+        this.interactionListener = listener;
     }
 
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.sample_show_user, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.sample_show_user, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        ChatlistModel users = list.get(position);
+        ChatlistModel chat = chatList.get(position);
 
-        Picasso.get().load(users.getProfilepic()).placeholder(R.drawable.profile_pic_avatar).into(holder.image);
-        holder.userName.setText(users.getUserName());
-        holder.lastMessage.setText(users.getLastMessage());
-        holder.timestampText.setText(DateFormatter.formatMessageTime(new Date(users.getLastMsgTime())));
+        // Load profile image with better error handling
+        loadProfileImage(holder.image, chat.getProfilepic());
+
+        // Set basic info
+        holder.userName.setText(chat.getUserName());
+        holder.lastMessage.setText(chat.getLastMessage());
+        holder.timestampText.setText(DateFormatter.formatMessageTime(new Date(chat.getLastMsgTime())));
 
         // Reset views to default state
-        holder.messageStatusIcon.setVisibility(View.GONE);
-        holder.unreadBadge.setVisibility(View.GONE);
-
-        Log.d(TAG, "=== onBindViewHolder Debug ===");
-        Log.d(TAG, "Position: " + position);
-        Log.d(TAG, "UserName: " + users.getUserName());
-        Log.d(TAG, "isTyping: " + users.isTyping());
-        Log.d(TAG, "==============================");
+        resetViewStates(holder);
 
         // Handle typing indicator
-        if (users.isTyping()) {
-            Log.d(TAG, "User " + users.getUserName() + " is typing - showing indicator");
+        handleTypingIndicator(holder, chat);
+
+        // Handle message status and unread count
+        handleMessageStatus(holder, chat);
+
+        // Set click listeners
+        setClickListeners(holder, chat, position, holder.itemView.getContext());
+    }
+
+    private void loadProfileImage(ImageView imageView, String profilePicUrl) {
+        Picasso.get()
+                .load(profilePicUrl)
+                .placeholder(R.drawable.profile_pic_avatar)
+                .error(R.drawable.profile_pic_avatar)
+                .fit()
+                .centerCrop()
+                .into(imageView);
+    }
+
+    private void resetViewStates(ViewHolder holder) {
+        holder.messageStatusIcon.setVisibility(View.GONE);
+        holder.unreadBadge.setVisibility(View.GONE);
+        holder.typingIndicator.setVisibility(View.GONE);
+        holder.lastMessage.setVisibility(View.VISIBLE);
+    }
+
+    private void handleTypingIndicator(ViewHolder holder, ChatlistModel chat) {
+        if (chat.isTyping()) {
+            Log.d(TAG, "User " + chat.getUserName() + " is typing");
             holder.lastMessage.setVisibility(View.GONE);
             holder.typingIndicator.setVisibility(View.VISIBLE);
         } else {
-            Log.d(TAG, "User " + users.getUserName() + " is NOT typing - hiding indicator");
             holder.lastMessage.setVisibility(View.VISIBLE);
             holder.typingIndicator.setVisibility(View.GONE);
         }
+    }
 
-        if(users.getLastMessageBy() != null && users.getLastMessageBy().equals(auth.getUid())){
+    private void handleMessageStatus(ViewHolder holder, ChatlistModel chat) {
+        String lastMessageBy = chat.getLastMessageBy();
+
+        if (lastMessageBy != null && lastMessageBy.equals(currentUserId)) {
             // Current user sent the last message - show message status
-            Log.d(TAG, "onBindViewHolder: isReadByUser: "+users.isReadByUser());
-            if (users.isReadByUser()) {
-                Log.d(TAG, "onBindViewHolder: Message has been read - showing double check");
-                holder.messageStatusIcon.setVisibility(View.VISIBLE);
-                holder.messageStatusIcon.setImageResource(R.drawable.double_tick);
-                holder.messageStatusIcon.setColorFilter(ContextCompat.getColor(holder.itemView.getContext(), R.color.blue), PorterDuff.Mode.SRC_IN);
-            } else {
-                Log.d(TAG, "onBindViewHolder: Message not read yet - showing single check");
-                holder.messageStatusIcon.setVisibility(View.VISIBLE);
-                holder.messageStatusIcon.setImageResource(R.drawable.signle_tick);
-                holder.messageStatusIcon.setColorFilter(ContextCompat.getColor(holder.itemView.getContext(), R.color.gray), PorterDuff.Mode.SRC_IN);
-            }
+            showMessageStatus(holder, chat);
         } else {
             // Other user sent the last message - show unread badge if applicable
-            if(users.getReadCount() > 0) {
-                Log.d(TAG, "onBindViewHolder: Showing unread badge with count: " + users.getReadCount());
-                holder.unreadBadge.setVisibility(View.VISIBLE);
-                holder.unreadBadge.setText(String.valueOf(users.getReadCount()));
+            showUnreadBadge(holder, chat);
+        }
+    }
+
+    private void showMessageStatus(ViewHolder holder, ChatlistModel chat) {
+        holder.messageStatusIcon.setVisibility(View.VISIBLE);
+
+        if (chat.isReadByUser()) {
+            holder.messageStatusIcon.setImageResource(R.drawable.double_tick);
+            holder.messageStatusIcon.setColorFilter(
+                    ContextCompat.getColor(holder.itemView.getContext(), R.color.blue),
+                    PorterDuff.Mode.SRC_IN
+            );
+        } else {
+            holder.messageStatusIcon.setImageResource(R.drawable.signle_tick);
+            holder.messageStatusIcon.setColorFilter(
+                    ContextCompat.getColor(holder.itemView.getContext(), R.color.gray),
+                    PorterDuff.Mode.SRC_IN
+            );
+        }
+    }
+
+    private void showUnreadBadge(ViewHolder holder, ChatlistModel chat) {
+        long unreadCount = chat.getReadCount();
+        if (unreadCount > 0) {
+            holder.unreadBadge.setVisibility(View.VISIBLE);
+            holder.unreadBadge.setText(String.valueOf(unreadCount));
+        }
+    }
+
+    private void setClickListeners(ViewHolder holder, ChatlistModel chat, int position, Context context) {
+        // Regular click listener
+        holder.itemView.setOnClickListener(v -> {
+            if (interactionListener != null) {
+                interactionListener.onChatClicked(chat);
             } else {
-                Log.d(TAG, "onBindViewHolder: No unread messages - hiding badge");
-                holder.unreadBadge.setVisibility(View.GONE);
+                // Fallback to direct intent
+                openChatActivity(chat, context);
             }
+        });
+
+        // Long click listener for delete
+        holder.itemView.setOnLongClickListener(v -> {
+            showDeleteDialog(chat, position, holder.itemView.getContext());
+            return true;
+        });
+    }
+
+    private void openChatActivity(ChatlistModel chat, Context context) {
+        Intent intent = new Intent(context, ChatDetailActivity.class);
+        intent.putExtra("userId", chat.getUserId());
+        intent.putExtra("profilePic", chat.getProfilepic());
+        intent.putExtra("userName", chat.getUserName());
+        context.startActivity(intent);
+    }
+
+    private void showDeleteDialog(ChatlistModel chat, int position, Context context) {
+        new AlertDialog.Builder(context)
+                .setTitle("Delete Conversation")
+                .setMessage("Are you sure you want to delete this conversation? This action cannot be undone.")
+                .setPositiveButton("Delete", (dialog, which) -> deleteChatConversation(chat, position))
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+
+    private void deleteChatConversation(ChatlistModel chat, int position) {
+        if (currentUserId == null) {
+            Log.e(TAG, "Current user ID is null");
+            return;
         }
 
-        holder.itemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(context, ChatDetailActivity.class);
-                intent.putExtra("userId", users.getUserId().toString());
-                intent.putExtra("profilePic", users.getProfilepic());
-                intent.putExtra("userName", users.getUserName());
-                context.startActivity(intent);
-            }
-        });
+        String receiverId = chat.getUserId();
+        String senderRoom = currentUserId + receiverId;
 
-        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                new AlertDialog.Builder(context)
-                        .setTitle("Delete")
-                        .setMessage("Are you sure you want to delete this conversation?")
-                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                String userId = FirebaseAuth.getInstance().getUid();
-                                String recId = users.getUserId();
-                                FirebaseDatabase database = FirebaseDatabase.getInstance();
-                                String senderRoom = userId + recId;
+        // Only delete current user's chat list and messages
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("ChatList/" + currentUserId + "/" + receiverId, null); // Delete from current user's chat list
+        updates.put("chats/" + currentUserId + "/" + senderRoom, null);    // Delete messages from current user's node
 
-                                // Delete from ChatList first
-                                database.getReference().child("ChatList").child(userId).child(recId).setValue(null).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                    @Override
-                                    public void onComplete(@NonNull Task<Void> task) {
-                                        // Then delete the chat messages
-                                        FirebaseDatabase database = FirebaseDatabase.getInstance();
-                                        String senderRoom = userId + recId;
-                                        database.getReference().child("chats").child(userId).child(senderRoom).setValue(null);
-                                    }
-                                });
-                            }
-                        })
-                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        })
-                        .show();
-                return true;
-            }
-        });
+        databaseRef.updateChildren(updates)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d(TAG, "Chat conversation deleted for current user");
+
+                    // Remove from UI
+                    if (position >= 0 && position < chatList.size()) {
+                        chatList.remove(position);
+                        notifyItemRemoved(position);
+                        notifyItemRangeChanged(position, chatList.size());
+                    } else {
+                        Log.w(TAG, "Tried to remove invalid index: " + position);
+                    }
+
+                    if (interactionListener != null) {
+                        interactionListener.onChatDeleted(chat);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to delete chat conversation", e);
+                    // Optionally show a toast or snackbar to the user
+                });
+    }
+
+    // Method to update a specific item in the list
+    public void updateItem(int position, ChatlistModel updatedChat) {
+        if (position >= 0 && position < chatList.size()) {
+            chatList.set(position, updatedChat);
+            notifyItemChanged(position);
+        }
+    }
+
+    // Method to add new chat item
+    public void addItem(ChatlistModel newChat) {
+        chatList.add(0, newChat); // Add at the beginning
+        notifyItemInserted(0);
+    }
+
+    // Method to remove item
+    public void removeItem(int position) {
+        if (position >= 0 && position < chatList.size()) {
+            chatList.remove(position);
+            notifyItemRemoved(position);
+            notifyItemRangeChanged(position, chatList.size());
+        }
+    }
+
+    // Method to clear all items
+    public void clearItems() {
+        int size = chatList.size();
+        chatList.clear();
+        notifyItemRangeRemoved(0, size);
     }
 
     @Override
     public int getItemCount() {
-        return list.size();
+        return chatList.size();
     }
 
-    static class ViewHolder extends RecyclerView.ViewHolder{
-        ImageView image, messageStatusIcon;
-        TextView userName,lastMessage, timestampText, unreadBadge, typingIndicator;
+    static class ViewHolder extends RecyclerView.ViewHolder {
+        final ImageView image;
+        final ImageView messageStatusIcon;
+        final TextView userName;
+        final TextView lastMessage;
+        final TextView timestampText;
+        final TextView unreadBadge;
+        final TextView typingIndicator;
+
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-
             image = itemView.findViewById(R.id.profileImage);
             messageStatusIcon = itemView.findViewById(R.id.messageStatusIcon);
             userName = itemView.findViewById(R.id.userName);

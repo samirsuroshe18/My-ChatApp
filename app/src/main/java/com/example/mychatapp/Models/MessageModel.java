@@ -1,8 +1,16 @@
 package com.example.mychatapp.Models;
 
 public class MessageModel {
-    String uId, message, messageId, groupMsgId;
+    String uId, message, messageId, groupMsgId, senderId;
     boolean seen;
+
+    public String getSenderId() {
+        return senderId;
+    }
+
+    public void setSenderId(String senderId) {
+        this.senderId = senderId;
+    }
 
     public boolean isSeen() {
         return seen;

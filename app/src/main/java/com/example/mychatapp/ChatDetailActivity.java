@@ -1,313 +1,22 @@
-//package com.example.mychatapp;
-//
-//import android.content.SharedPreferences;
-//import android.graphics.Rect;
-//import android.os.Bundle;
-//import android.os.Handler;
-//import android.os.Looper;
-//import android.util.Log;
-//import android.view.MenuItem;
-//import android.view.View;
-//import android.view.ViewTreeObserver;
-//
-//import androidx.activity.EdgeToEdge;
-//import androidx.annotation.NonNull;
-//import androidx.appcompat.app.ActionBar;
-//import androidx.appcompat.app.AppCompatActivity;
-//import androidx.core.graphics.Insets;
-//import androidx.core.view.ViewCompat;
-//import androidx.core.view.WindowInsetsCompat;
-//import androidx.recyclerview.widget.DiffUtil;
-//import androidx.recyclerview.widget.LinearLayoutManager;
-//
-//import com.example.mychatapp.Adapters.ChatAdapter;
-//import com.example.mychatapp.Models.ChatItem;
-//import com.example.mychatapp.Models.ChatlistModel;
-//import com.example.mychatapp.Models.MessageModel;
-//import com.example.mychatapp.Models.Users;
-//import com.example.mychatapp.databinding.ActivityChatDetailBinding;
-//import com.example.mychatapp.utils.ChatItemDiffCallback;
-//import com.example.mychatapp.utils.NotificationSender;
-//import com.google.android.material.appbar.MaterialToolbar;
-//import com.google.firebase.auth.FirebaseAuth;
-//import com.google.firebase.database.DataSnapshot;
-//import com.google.firebase.database.DatabaseError;
-//import com.google.firebase.database.FirebaseDatabase;
-//import com.google.firebase.database.ValueEventListener;
-//import com.squareup.picasso.Picasso;
-//
-//import java.text.SimpleDateFormat;
-//import java.util.ArrayList;
-//import java.util.Calendar;
-//import java.util.Date;
-//import java.util.Locale;
-//
-//public class ChatDetailActivity extends AppCompatActivity {
-//    private static final String TAG = "ChatDetailActivity";
-//    FirebaseDatabase database;
-//    FirebaseAuth auth;
-//    ActivityChatDetailBinding binding;
-//    MaterialToolbar appBar;
-//    String receiverId;
-//    ChatAdapter chatAdapter;
-//
-//    @Override
-//    protected void onResume() {
-//        super.onResume();
-//        SharedPreferences.Editor editor = getSharedPreferences("chat_app", MODE_PRIVATE).edit();
-//        editor.putString("currentChatUserId", getIntent().getStringExtra("userId")); // from intent
-//        editor.apply();
-//    }
-//
-//    @Override
-//    protected void onPause() {
-//        super.onPause();
-//        SharedPreferences.Editor editor = getSharedPreferences("chat_app", MODE_PRIVATE).edit();
-//        editor.remove("currentChatUserId");
-//        editor.apply();
-//    }
-//
-//    @Override
-//    protected void onCreate(Bundle savedInstanceState) {
-//        super.onCreate(savedInstanceState);
-//        EdgeToEdge.enable(this);
-//        binding = ActivityChatDetailBinding.inflate(getLayoutInflater());
-//        setContentView(binding.getRoot());
-//
-//        ViewCompat.setOnApplyWindowInsetsListener(binding.main, (v, insets) -> {
-//            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-//            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-//            return insets;
-//        });
-//
-//        appBar = findViewById(R.id.toolbar);
-//        setSupportActionBar(appBar);
-//        ActionBar actionBar = getSupportActionBar();
-//        if (actionBar != null) {
-//            actionBar.setDisplayHomeAsUpEnabled(true);
-//        }
-//
-//        database = FirebaseDatabase.getInstance();
-//        auth = FirebaseAuth.getInstance();
-//
-//        final String senderId = auth.getUid();
-//        receiverId = getIntent().getStringExtra("userId");
-//        String userName = getIntent().getStringExtra("userName");
-//        String profilePic = getIntent().getStringExtra("profilePic");
-//        Log.d(TAG, "userId : "+receiverId);
-//        Log.d(TAG, "userName : "+userName);
-//        Log.d(TAG, "profilePic : "+profilePic);
-//
-//        binding.userNameChat.setText(userName);
-//        if (profilePic != null && !profilePic.isEmpty()) {
-//            Picasso.get().load(profilePic).placeholder(R.drawable.profile_pic_avatar).into(binding.profileImage);
-//        }
-//
-//        // Set up RecyclerView
-//        final ArrayList<MessageModel> messageModel = new ArrayList<>();
-//        ArrayList<ChatItem> chatItems = new ArrayList<>();
-//        chatAdapter = new ChatAdapter(chatItems, ChatDetailActivity.this, receiverId);
-//        binding.chatRecyclerView.setAdapter(chatAdapter);
-//
-//        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-//        layoutManager.setStackFromEnd(true); // This will show latest messages at bottom
-//        binding.chatRecyclerView.setLayoutManager(layoutManager);
-//
-//        // Firebase chat logic
-//        final String senderRoom = senderId + receiverId;
-//        final String receiverRoom = receiverId + senderId;
-//
-//        databaseRef.child("chats").child(senderId).child(senderRoom).addValueEventListener(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot snapshot) {
-//                // Store old list for comparison
-//                ArrayList<ChatItem> oldChatItems = new ArrayList<>(chatItems);
-//
-//                messageModel.clear();
-//                ArrayList<ChatItem> newChatItems = new ArrayList<>();
-//
-//                String lastDate = "";
-//                SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
-//
-//                for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
-//                    MessageModel model = dataSnapshot.getValue(MessageModel.class);
-//                    if (model == null) continue;
-//
-//                    model.setMessageId(dataSnapshot.getKey());
-//                    messageModel.add(model);
-//
-//                    String currentDate = dateFormat.format(new Date(model.getTimestamp()));
-//                    if (!currentDate.equals(lastDate)) {
-//                        newChatItems.add(new ChatItem(getFriendlyDateHeader(model.getTimestamp())));
-//                        lastDate = currentDate;
-//                    }
-//
-//                    newChatItems.add(new ChatItem(model));
-//                }
-//
-//                // Calculate diff and update adapter
-//                DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new ChatItemDiffCallback(oldChatItems, newChatItems));
-//
-//                chatItems.clear();
-//                chatItems.addAll(newChatItems);
-//                diffResult.dispatchUpdatesTo(chatAdapter);
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError error) {
-//                Log.e(TAG, "Database error: " + error.getMessage());
-//            }
-//        });
-//
-//        binding.sendBtn.setOnClickListener(v -> {
-//            String messageText = binding.etMessage.getText().toString().trim();
-//
-//            if (messageText.isEmpty()) {
-//                binding.etMessage.setError("Enter Message");
-//                return;
-//            }
-//
-//            final MessageModel model = new MessageModel(senderId, messageText);
-//            model.setTimestamp(new Date().getTime());
-//            binding.etMessage.setText("");
-//
-//            databaseRef.child("Users").child(receiverId)
-//                    .addListenerForSingleValueEvent(new ValueEventListener() {
-//                        @Override
-//                        public void onDataChange(@NonNull DataSnapshot snapshot) {
-//                            String fcmToken = snapshot.child("fcmToken").getValue(String.class);
-//                            ChatlistModel oppositeUser = snapshot.getValue(ChatlistModel.class);
-//                            oppositeUser.setLastMessage(messageText);
-//                            oppositeUser.setLastMsgTime(new Date().getTime());
-//
-//                            databaseRef.child("ChatList")
-//                                    .child(receiverId)
-//                                    .child(senderId)
-//                                    .addListenerForSingleValueEvent(new ValueEventListener() {
-//                                        @Override
-//                                        public void onDataChange(@NonNull DataSnapshot snapshot) {
-//                                            ChatlistModel chatInfo = snapshot.getValue(ChatlistModel.class);
-//                                            if (chatInfo != null) {
-//                                                if (chatInfo.isRead()) {
-//                                                    chatInfo.setRead(false);
-//                                                    chatInfo.setReadCount(1);
-//                                                } else {
-//                                                    chatInfo.setReadCount(chatInfo.getReadCount() + 1);
-//                                                }
-//                                            }
-//
-//
-//                                        }
-//
-//                                        @Override
-//                                        public void onCancelled(@NonNull DatabaseError error) {
-//
-//                                        }
-//                                    });
-//
-//                            if (oppositeUser != null) {
-//                                databaseRef
-//                                        .child("ChatList")
-//                                        .child(senderId)
-//                                        .child(receiverId)
-//                                        .setValue(oppositeUser)
-//                                        .addOnCompleteListener(task -> {
-//                                            // callback
-//                                            // Sending message to the sender rooms
-//                                            databaseRef.child("chats").child(senderId).child(senderRoom).push().setValue(model).addOnSuccessListener(unused -> {
-//                                                // Message sent successfully
-//                                                databaseRef.child("chats").child(receiverId).child(receiverRoom).push().setValue(model).addOnSuccessListener(unused1 -> {
-//                                                    // Message sent successfully
-//                                                    databaseRef.child("Users").child(senderId).addListenerForSingleValueEvent(new ValueEventListener() {
-//                                                        @Override
-//                                                        public void onDataChange(@NonNull DataSnapshot snapshot) {
-//                                                            ChatlistModel payload = snapshot.getValue(ChatlistModel.class);
-//                                                            payload.setLastMessage(messageText);
-//                                                            payload.setLastMsgTime(new Date().getTime());
-//                                                            if (payload != null) {
-//                                                                databaseRef.child("ChatList")
-//                                                                        .child(receiverId)
-//                                                                        .child(senderId).setValue(payload);
-//                                                            }
-//                                                            scrollToBottom();
-//                                                            NotificationSender.sendNotification(fcmToken, payload.getUserId(), payload.getUserName(), messageText, payload.getProfilepic());
-//                                                        }
-//
-//                                                        @Override
-//                                                        public void onCancelled(@NonNull DatabaseError error) {
-//
-//                                                        }
-//                                                    });
-//                                                });
-//                                            });
-//                                        });
-//                            }
-//                        }
-//
-//                        @Override
-//                        public void onCancelled(@NonNull DatabaseError error) {
-//
-//                        }
-//                    });
-//        });
-//    }
-//
-//    private void scrollToBottom() {
-//        if (chatAdapter.getItemCount() > 0) {
-//            binding.chatRecyclerView.post(() -> {
-//                binding.chatRecyclerView.smoothScrollToPosition(chatAdapter.getItemCount() - 1);
-//            });
-//        }
-//    }
-//
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        if (item.getItemId() == android.R.id.home) {
-//            finish();
-//            return true;
-//        }
-//        return super.onOptionsItemSelected(item);
-//    }
-//
-//    public static String getFriendlyDateHeader(long timestamp) {
-//        Calendar messageCal = Calendar.getInstance();
-//        messageCal.setTimeInMillis(timestamp);
-//
-//        Calendar todayCal = Calendar.getInstance();
-//
-//        // Today
-//        if (messageCal.get(Calendar.YEAR) == todayCal.get(Calendar.YEAR) && messageCal.get(Calendar.DAY_OF_YEAR) == todayCal.get(Calendar.DAY_OF_YEAR)) {
-//            return "Today";
-//        }
-//
-//        // Yesterday
-//        todayCal.add(Calendar.DAY_OF_YEAR, -1);
-//        if (messageCal.get(Calendar.YEAR) == todayCal.get(Calendar.YEAR) && messageCal.get(Calendar.DAY_OF_YEAR) == todayCal.get(Calendar.DAY_OF_YEAR)) {
-//            return "Yesterday";
-//        }
-//
-//        // Else, return formatted date
-//        SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
-//        return dateFormat.format(new Date(timestamp));
-//    }
-//}
-
-
 package com.example.mychatapp;
 
 import android.content.SharedPreferences;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.PopupMenu;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -323,53 +32,782 @@ import com.example.mychatapp.Models.Users;
 import com.example.mychatapp.databinding.ActivityChatDetailBinding;
 import com.example.mychatapp.utils.ChatItemDiffCallback;
 import com.example.mychatapp.utils.NotificationSender;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.android.material.appbar.MaterialToolbar;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.database.ServerValue;
 import com.squareup.picasso.Picasso;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
+import java.util.Map;
 
 public class ChatDetailActivity extends AppCompatActivity {
     private static final String TAG = "ChatDetailActivity";
-    DatabaseReference databaseRef;
-    FirebaseAuth auth;
-    ActivityChatDetailBinding binding;
-    MaterialToolbar appBar;
-    String receiverId, profilePic, userName, senderId, receiverRoom, senderRoom;
-    ChatAdapter chatAdapter;
-    ArrayList<ChatItem> chatItems;
+    private static final long TYPING_TIMEOUT = 3000; // 3 seconds
+    private static final String PREFS_NAME = "chat_app";
+    private static final String CURRENT_CHAT_USER_ID = "currentChatUserId";
+
+    // Firebase references
+    private DatabaseReference databaseRef;
+    private DatabaseReference usersRef;
+    private DatabaseReference chatsRef;
+    private DatabaseReference chatListRef;
+    private FirebaseAuth auth;
+
+    // UI Components
+    private ActivityChatDetailBinding binding;
+    private ChatAdapter chatAdapter;
+    private ArrayList<ChatItem> chatItems;
+
+    // Chat data
+    private String receiverId, profilePic, userName, senderId, receiverRoom, senderRoom;
+
+    // Listeners for cleanup
+    private ValueEventListener userStatusListener;
+    private ValueEventListener chatMessagesListener;
+    private ValueEventListener markReadListener;
+    private ValueEventListener chatListListener;
+    private ValueEventListener senderChatListListener;
+    private ValueEventListener receiverChatListListener;
+    // Handler for typing status
+    private final Handler typingHandler = new Handler(Looper.getMainLooper());
+    private Runnable typingTimeout;
+
+    // SharedPreferences
+    private SharedPreferences sharedPreferences;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
+        binding = ActivityChatDetailBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
+        initializeComponents();
+        setupToolbar();
+        extractIntentData();
+        setupRecyclerView();
+        setupFirebaseReferences();
+        setupUI();
+        setupListeners();
+    }
+
+    private void initializeComponents() {
+        auth = FirebaseAuth.getInstance();
+        senderId = auth.getUid();
+        sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        chatItems = new ArrayList<>();
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.main, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
+
+        binding.moreVert.setOnClickListener(v -> showPopupMenu(binding.moreVert));
+    }
+
+    private void setupToolbar() {
+        setSupportActionBar(binding.toolbar);
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
+    }
+
+    private void setupRecyclerView() {
+        chatAdapter = new ChatAdapter(chatItems, receiverId);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        layoutManager.setStackFromEnd(true);
+        binding.chatRecyclerView.setLayoutManager(layoutManager);
+        binding.chatRecyclerView.setAdapter(chatAdapter);
+    }
+
+    private void extractIntentData() {
+        receiverId = getIntent().getStringExtra("userId");
+        userName = getIntent().getStringExtra("userName");
+        profilePic = getIntent().getStringExtra("profilePic");
+
+        if (receiverId == null || senderId == null) {
+            Log.e(TAG, "Missing required user IDs");
+            finish();
+            return;
+        }
+
+        senderRoom = senderId + receiverId;
+        receiverRoom = receiverId + senderId;
+    }
+
+    private void setupFirebaseReferences() {
+        databaseRef = FirebaseDatabase.getInstance().getReference();
+        usersRef = databaseRef.child("Users");
+        chatsRef = databaseRef.child("chats");
+        chatListRef = databaseRef.child("ChatList");
+    }
+
+    private void setupUI() {
+        binding.userNameChat.setText(userName);
+        loadProfileImage();
+    }
+
+    private void loadProfileImage() {
+        if (profilePic != null && !profilePic.isEmpty()) {
+            Picasso.get()
+                    .load(profilePic)
+                    .placeholder(R.drawable.profile_pic_avatar)
+                    .error(R.drawable.profile_pic_avatar)
+                    .into(binding.profileImage);
+        }
+    }
+
+    private void setupListeners() {
+        setupUserStatusListener();
+        setupChatMessagesListener();
+        setupChatListListener();
+        setupTypingListener();
+        setupSendButton();
+    }
+
+    private void setupUserStatusListener() {
+        userStatusListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    Object status = snapshot.child("status").getValue();
+                    if(status instanceof Long){
+                        updateUserStatus(getTimeAgo((Long) status));
+                    }else {
+                        updateUserStatus((String) status);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e(TAG, "User status listener error: " + error.getMessage());
+            }
+        };
+        usersRef.child(receiverId).addValueEventListener(userStatusListener);
+    }
+
+    private void updateUserStatus(String status) {
+        if (status == null) return;
+
+        switch (status) {
+            case "online":
+                binding.userStatusChat.setText("Online");
+                break;
+            case "typing":
+                binding.userStatusChat.setText("Typing...");
+                break;
+            default:
+                try {
+                    if(status!=null){
+                        binding.userStatusChat.setText("Last seen: " + status);
+                    }else{
+                        long lastSeen = Long.parseLong(status);
+                        binding.userStatusChat.setText("Last seen: " + getTimeAgo(lastSeen));
+                    }
+                } catch (NumberFormatException e) {
+                    binding.userStatusChat.setText("Offline");
+                }
+                break;
+        }
+    }
+
+    private void setupChatMessagesListener() {
+        chatMessagesListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                updateChatMessages(snapshot);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e(TAG, "Chat messages listener error: " + error.getMessage());
+            }
+        };
+        chatsRef.child(senderId).child(senderRoom).addValueEventListener(chatMessagesListener);
+    }
+
+    private void updateChatMessages(DataSnapshot snapshot) {
+        List<ChatItem> oldChatItems = new ArrayList<>(chatItems);
+        List<ChatItem> newChatItems = new ArrayList<>();
+
+        String lastDate = "";
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
+
+        for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
+            MessageModel model = dataSnapshot.getValue(MessageModel.class);
+            if (model == null) continue;
+
+            model.setMessageId(dataSnapshot.getKey());
+
+            String currentDate = dateFormat.format(new Date(model.getTimestamp()));
+            if (!currentDate.equals(lastDate)) {
+                newChatItems.add(new ChatItem(getFriendlyDateHeader(model.getTimestamp())));
+                lastDate = currentDate;
+            }
+
+            newChatItems.add(new ChatItem(model));
+        }
+
+        // Use DiffUtil for efficient updates
+        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(
+                new ChatItemDiffCallback(oldChatItems, newChatItems));
+
+        chatItems.clear();
+        chatItems.addAll(newChatItems);
+        diffResult.dispatchUpdatesTo(chatAdapter);
+
+        scrollToBottom();
+    }
+
+    private void setupChatListListener() {
+        chatListListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                ChatlistModel chatEntry = snapshot.getValue(ChatlistModel.class);
+                if (chatEntry != null && receiverId.equals(chatEntry.getLastMessageBy())) {
+                    markChatAsRead(chatEntry);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e(TAG, "Chat list listener error: " + error.getMessage());
+            }
+        };
+        chatListRef.child(senderId).child(receiverId).child("userId")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (snapshot.exists()) {
+                            checkReceiverChatListForRead(); // <- NEW
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Log.e(TAG, "Chat list listener error: " + error.getMessage());
+                    }
+                });
+//        chatListRef.child(senderId).child(receiverId).addValueEventListener(chatListListener);
+    }
+
+    private void checkReceiverChatListForRead() {
+        chatListRef.child(receiverId).child(senderId).child("userId")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (snapshot.exists()) {
+                            // Now add the real chatListListener
+                            chatListRef.child(senderId).child(receiverId).addValueEventListener(chatListListener);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Log.e(TAG, "Receiver chat check for read failed: " + error.getMessage());
+                    }
+                });
+    }
+
+
+    private void markChatAsRead(ChatlistModel chatEntry) {
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("read", true);
+        updates.put("readCount", 0);
+
+        // Update sender's chat list
+        chatListRef.child(senderId).child(receiverId).updateChildren(updates);
+
+        // Update receiver's chat list
+        Map<String, Object> receiverUpdates = new HashMap<>();
+        receiverUpdates.put("readByUser", true);
+        receiverUpdates.put("seen", true);
+        chatListRef.child(receiverId).child(senderId).updateChildren(receiverUpdates);
+    }
+
+    private void setupTypingListener() {
+        // Check if both users exist in each other's chat list before enabling typing
+        chatListRef.child(senderId).child(receiverId).child("userId")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (snapshot.exists()) {
+                            checkReceiverChatList();
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Log.e(TAG, "Typing check error: " + error.getMessage());
+                    }
+                });
+    }
+
+    private void checkReceiverChatList() {
+        chatListRef.child(receiverId).child(senderId).child("userId")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (snapshot.exists()) {
+                            setupTypingDetection();
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Log.e(TAG, "Receiver chat list check error: " + error.getMessage());
+                    }
+                });
+    }
+
+    private void setupTypingDetection() {
+        binding.etMessage.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (s.length() > 0) {
+                    setUserTypingStatus();
+                }
+
+                // Cancel previous timeout
+                if (typingTimeout != null) {
+                    typingHandler.removeCallbacks(typingTimeout);
+                }
+
+                // Set new timeout
+                typingTimeout = this::stopTyping;
+                typingHandler.postDelayed(typingTimeout, TYPING_TIMEOUT);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (s.length() == 0) {
+                    stopTyping();
+                }
+            }
+
+            private void stopTyping() {
+                setUserOnlineStatus();
+                if (typingTimeout != null) {
+                    typingHandler.removeCallbacks(typingTimeout);
+                    typingTimeout = null;
+                }
+            }
+        });
+    }
+
+    private void setupSendButton() {
+        binding.sendBtn.setOnClickListener(v -> {
+            String messageText = binding.etMessage.getText().toString().trim();
+            if (messageText.isEmpty()) {
+                binding.etMessage.setError("Enter Message");
+                return;
+            }
+            sendMessage(messageText);
+        });
+    }
+
+    private void setUserTypingStatus() {
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("status", "typing");
+        usersRef.child(senderId).updateChildren(updates);
+
+        // Update typing status in chat list
+        chatListRef.child(receiverId).child(senderId).child("isTyping").setValue(true);
+    }
+
+    private void setUserOnlineStatus() {
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("status", "online");
+        usersRef.child(senderId).updateChildren(updates);
+
+        // Update typing status in chat list
+        chatListRef.child(receiverId).child(senderId).child("isTyping").setValue(false);
+    }
+
+    private void sendMessage(String messageText) {
+        Map<String, Object> messageData = new HashMap<>();
+        messageData.put("senderId", senderId);
+        messageData.put("message", messageText);
+        messageData.put("timestamp", ServerValue.TIMESTAMP);
+        messageData.put("read", false);
+        messageData.put("seen", false);
+        Log.d(TAG, "Message data: " + messageData);
+
+        // Use batch write for better performance
+        Map<String, Object> updates = new HashMap<>();
+        String messageKey = chatsRef.child(senderId).child(senderRoom).push().getKey();
+
+        if (messageKey != null) {
+            updates.put("chats/" + senderId + "/" + senderRoom + "/" + messageKey, messageData);
+            updates.put("chats/" + receiverId + "/" + receiverRoom + "/" + messageKey, messageData);
+
+            databaseRef.updateChildren(updates)
+                    .addOnSuccessListener(unused -> {
+                        updateChatLists(messageText);
+                        binding.etMessage.setText("");
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e(TAG, "Failed to send message: " + e.getMessage());
+                        // Show error to user
+                    });
+        }
+    }
+
+    private void updateChatLists(String messageText) {
+        long currentTime = System.currentTimeMillis();
+
+        // Update both chat lists efficiently
+        updateSenderChatList(messageText, currentTime);
+        updateReceiverChatList(messageText, currentTime);
+    }
+
+    private void updateSenderChatList(String messageText, long currentTime) {
+        usersRef.child(receiverId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Users receiverUser = snapshot.getValue(Users.class);
+                if (receiverUser != null) {
+                    ChatlistModel senderChatEntry = createChatListEntry(
+                            receiverId, receiverUser.getUserName(), receiverUser.getProfilepic(),
+                            messageText, currentTime, senderId, true, false, 0);
+
+                    chatListRef.child(senderId).child(receiverId).setValue(senderChatEntry);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e(TAG, "Error updating sender chat list: " + error.getMessage());
+            }
+        });
+    }
+
+    private void updateReceiverChatList(String messageText, long currentTime) {
+        usersRef.child(senderId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Users senderUser = snapshot.getValue(Users.class);
+                if (senderUser != null) {
+                    // Check existing unread count
+                    chatListRef.child(receiverId).child(senderId)
+                            .addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                    long unreadCount = 1;
+                                    ChatlistModel existingChat = snapshot.getValue(ChatlistModel.class);
+                                    if (existingChat != null) {
+                                        unreadCount = existingChat.getReadCount() + 1;
+                                    }
+
+                                    ChatlistModel receiverChatEntry = createChatListEntry(
+                                            senderId, senderUser.getUserName(), senderUser.getProfilepic(),
+                                            messageText, currentTime, senderId, false, true, unreadCount);
+
+                                    chatListRef.child(receiverId).child(senderId).setValue(receiverChatEntry);
+
+                                    // Send notification
+                                    sendNotification(senderUser, messageText);
+                                }
+
+                                @Override
+                                public void onCancelled(@NonNull DatabaseError error) {
+                                    Log.e(TAG, "Error updating receiver chat list: " + error.getMessage());
+                                }
+                            });
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e(TAG, "Error getting sender info: " + error.getMessage());
+            }
+        });
+    }
+
+    private ChatlistModel createChatListEntry(String userId, String userName, String profilePic,
+                                              String lastMessage, long timestamp, String lastMessageBy,
+                                              boolean read, boolean readByUser, long readCount) {
+        ChatlistModel chatEntry = new ChatlistModel();
+        chatEntry.setUserId(userId);
+        chatEntry.setUserName(userName);
+        chatEntry.setProfilepic(profilePic);
+        chatEntry.setLastMessage(lastMessage);
+        chatEntry.setLastMsgTime(timestamp);
+        chatEntry.setLastMessageBy(lastMessageBy);
+        chatEntry.setRead(read);
+        chatEntry.setReadByUser(readByUser);
+        chatEntry.setReadCount(readCount);
+        return chatEntry;
+    }
+
+    private void sendNotification(Users senderUser, String messageText) {
+        usersRef.child(receiverId).child("FCMToken")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        String fcmToken = snapshot.getValue(String.class);
+                        if (fcmToken != null) {
+                            NotificationSender.sendNotification(fcmToken, senderId,
+                                    senderUser.getUserName(), messageText, senderUser.getProfilepic());
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Log.e(TAG, "Error getting FCM token: " + error.getMessage());
+                    }
+                });
+    }
+
+    private void markMessagesAsRead() {
+        if (senderId == null || receiverId == null) return;
+
+        DatabaseReference senderRef = chatListRef.child(senderId).child(receiverId);
+        DatabaseReference receiverRef = chatListRef.child(receiverId).child(senderId);
+
+        // Remove any existing listeners (defensive)
+        if (senderChatListListener != null) {
+            senderRef.removeEventListener(senderChatListListener);
+        }
+
+        if (receiverChatListListener != null) {
+            receiverRef.removeEventListener(receiverChatListListener);
+        }
+
+        // Set sender listener
+        senderChatListListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    Map<String, Object> updates = new HashMap<>();
+                    updates.put("read", true);
+                    updates.put("readByUser", true);
+                    updates.put("readCount", 0);
+                    senderRef.updateChildren(updates);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {}
+        };
+        senderRef.addValueEventListener(senderChatListListener);
+
+        // Set receiver listener
+        receiverChatListListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    Map<String, Object> updates = new HashMap<>();
+                    updates.put("readByUser", true);
+                    receiverRef.updateChildren(updates);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {}
+        };
+        receiverRef.addValueEventListener(receiverChatListListener);
+    }
+
+    private void markMessagesAsSeen() {
+        markReadListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                updateSeenMessage(snapshot);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e(TAG, "Chat messages listener error: " + error.getMessage());
+            }
+        };
+
+        chatsRef.child(receiverId).child(receiverRoom).addValueEventListener(markReadListener);
+    }
+
+    private void updateSeenMessage(DataSnapshot snapshot) {
+        for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
+            MessageModel message = dataSnapshot.getValue(MessageModel.class);
+            if (message == null) continue;
+
+            boolean isIncoming = !senderId.equals(message.getSenderId());
+            boolean notSeen = !Boolean.TRUE.equals(message.isSeen());
+
+            if (isIncoming && notSeen) {
+                dataSnapshot.getRef().child("seen").setValue(true);
+            }
+        }
+    }
+
+    private void scrollToBottom() {
+        if (chatAdapter.getItemCount() > 0) {
+            binding.chatRecyclerView.post(() ->
+                    binding.chatRecyclerView.smoothScrollToPosition(chatAdapter.getItemCount() - 1));
+        }
+    }
 
     @Override
     protected void onResume() {
         super.onResume();
-        SharedPreferences.Editor editor = getSharedPreferences("chat_app", MODE_PRIVATE).edit();
-        editor.putString("currentChatUserId", getIntent().getStringExtra("userId")); // from intent
-        editor.apply();
+        sharedPreferences.edit()
+                .putString(CURRENT_CHAT_USER_ID, receiverId)
+                .apply();
         markMessagesAsRead();
+        markMessagesAsSeen();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        SharedPreferences.Editor editor = getSharedPreferences("chat_app", MODE_PRIVATE).edit();
-        editor.remove("currentChatUserId");
-        editor.apply();
+        sharedPreferences.edit()
+                .remove(CURRENT_CHAT_USER_ID)
+                .apply();
+        setUserOnlineStatus();
     }
 
-    public String getTimeAgo(long time) {
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        cleanup();
+    }
+
+    private void cleanup() {
+        // Remove Firebase listeners
+        if (userStatusListener != null && receiverId != null) {
+            usersRef.child(receiverId).removeEventListener(userStatusListener);
+        }
+        if (chatMessagesListener != null && senderId != null && senderRoom != null) {
+            chatsRef.child(senderId).child(senderRoom).removeEventListener(chatMessagesListener);
+        }
+        if (markReadListener != null && receiverId != null && receiverRoom != null) {
+            chatsRef.child(receiverId).child(receiverRoom).removeEventListener(markReadListener);
+        }
+        if (chatListListener != null && senderId != null && receiverId != null) {
+            chatListRef.child(senderId).child(receiverId).removeEventListener(chatListListener);
+        }
+        if (senderChatListListener != null && senderId != null && receiverId != null) {
+            chatListRef.child(senderId).child(receiverId).removeEventListener(senderChatListListener);
+            senderChatListListener = null;
+        }
+        if (receiverChatListListener != null && senderId != null && receiverId != null) {
+            chatListRef.child(receiverId).child(senderId).removeEventListener(receiverChatListListener);
+            receiverChatListListener = null;
+        }
+
+        // Clean up handler
+        if (typingTimeout != null) {
+            typingHandler.removeCallbacks(typingTimeout);
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void showPopupMenu(View anchor) {
+        PopupMenu popup = new PopupMenu(this, anchor);
+        popup.getMenuInflater().inflate(R.menu.menu, popup.getMenu()); // menu with only Clear Chat
+        popup.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.action_clear_chat) {
+                showClearChatConfirmation(); // your method
+                return true;
+            }
+            return false;
+        });
+        popup.show();
+    }
+
+    private void showClearChatConfirmation() {
+        new AlertDialog.Builder(this)
+                .setTitle("Clear Chat")
+                .setMessage("Are you sure you want to delete all messages in this chat?")
+                .setPositiveButton("Clear", (dialog, which) -> clearAllMessages())
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void clearAllMessages() {
+        if (senderId == null || receiverId == null) return;
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("/" + senderId + "/" + senderRoom, null);
+
+        chatsRef.updateChildren(updates)
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(this, "Chat cleared", Toast.LENGTH_SHORT).show();
+                    updateLastMessage(senderId, senderRoom, receiverRoom);
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Failed to clear chat", Toast.LENGTH_SHORT).show();
+                    Log.e("ClearChat", "Error clearing chat", e);
+                });
+    }
+
+    private void updateLastMessage(String userId, String senderRoom, String receiverRoom) {
+        // Get the last message from sender's chat
+        chatsRef.child(userId)
+                .child(senderRoom)
+                .limitToLast(1)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        String lastMessage = "";
+
+                        for (DataSnapshot messageSnap : snapshot.getChildren()) {
+                            String message = messageSnap.child("message").getValue(String.class);
+                            if (message != null) {
+                                lastMessage = message;
+                            }
+                        }
+
+                        // Update ChatList for sender
+                        updateChatList(userId, receiverId, lastMessage);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Log.e(TAG, "Failed to get last message", error.toException());
+                    }
+                });
+    }
+
+    private void updateChatList(String userId, String chatPartnerId, String lastMessage) {
+        if (userId == null || chatPartnerId == null) {
+            Log.e(TAG, "updateChatList failed: userId or chatPartnerId is null. userId=" + userId + ", chatId=" + chatPartnerId);
+            return;
+        }
+
+        chatListRef.child(userId)
+                .child(chatPartnerId)
+                .child("lastMessage")
+                .setValue(lastMessage)
+                .addOnFailureListener(e ->
+                        Log.e(TAG, "Failed to update ChatList", e)
+                );
+    }
+
+    private String getTimeAgo(long time) {
         long now = System.currentTimeMillis();
         long diff = now - time;
 
@@ -384,578 +822,6 @@ public class ChatDetailActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
-        binding = ActivityChatDetailBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
-
-        ViewCompat.setOnApplyWindowInsetsListener(binding.main, (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
-
-        appBar = findViewById(R.id.toolbar);
-        setSupportActionBar(appBar);
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setDisplayHomeAsUpEnabled(true);
-        }
-        databaseRef = FirebaseDatabase.getInstance().getReference();
-        auth = FirebaseAuth.getInstance();
-        senderId = auth.getUid();
-        receiverId = getIntent().getStringExtra("userId");
-        userName = getIntent().getStringExtra("userName");
-        profilePic = getIntent().getStringExtra("profilePic");
-
-        binding.userNameChat.setText(userName);
-        if (profilePic != null && !profilePic.isEmpty()) {
-            Picasso.get().load(profilePic).placeholder(R.drawable.profile_pic_avatar).into(binding.profileImage);
-        }
-
-        // Set up RecyclerView
-        chatItems = new ArrayList<>();
-        chatAdapter = new ChatAdapter(chatItems, receiverId);
-        binding.chatRecyclerView.setAdapter(chatAdapter);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        layoutManager.setStackFromEnd(true); // This will show latest messages at bottom
-        binding.chatRecyclerView.setLayoutManager(layoutManager);
-
-        // Firebase chat logic
-        senderRoom = senderId + receiverId;
-        receiverRoom = receiverId + senderId;
-
-        databaseRef.child("Users").child(receiverId).addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()) {
-                    String status = snapshot.child("status").getValue(String.class);
-
-                    if (status != null) {
-                        if (status.equals("online")) {
-                            binding.userStatusChat.setText("Online");
-                        } else if (status.equals("typing")) {
-                            binding.userStatusChat.setText("Typing...");
-                        } else {
-                            // Convert timestamp to time ago
-                            long lastSeen = Long.parseLong(status);
-                            binding.userStatusChat.setText("Last seen: " + getTimeAgo(lastSeen));
-                        }
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });
-
-//        binding.etMessage.addTextChangedListener(new TextWatcher() {
-//            private final Handler handler = new Handler();
-//            private Runnable typingTimeout;
-//            @Override
-//            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-//
-//            }
-//
-//            @Override
-//            public void onTextChanged(CharSequence s, int start, int before, int count) {
-//                setUserTypingStatus(); // Set status to "typing"
-//
-//                // Remove previous timeout
-//                if (typingTimeout != null) {
-//                    handler.removeCallbacks(typingTimeout);
-//                }
-//
-//                // Set a new timeout to reset status after 2.5 seconds of inactivity
-//                typingTimeout = () -> setUserOnlineStatus();
-//                handler.postDelayed(typingTimeout, 6000); // 2.5 seconds
-//            }
-//
-//            @Override
-//            public void afterTextChanged(Editable s) {
-//
-//            }
-//        });
-
-        // Also make sure your TextWatcher timeout is working properly:
-        databaseRef.child("ChatList")
-                .child(senderId)
-                .child(receiverId)
-                .child("userId")
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.exists()) {
-                            // Key exists
-                            String userId = dataSnapshot.getValue(String.class);
-                            Log.d("Firebase", "userId exists: " + userId);
-
-                            databaseRef.child("ChatList")
-                                    .child(receiverId)
-                                    .child(senderId)
-                                    .child("userId")
-                                    .addListenerForSingleValueEvent(new ValueEventListener() {
-                                        @Override
-                                        public void onDataChange(DataSnapshot dataSnapshot) {
-                                            if (dataSnapshot.exists()) {
-                                                // Key exists
-                                                String userId = dataSnapshot.getValue(String.class);
-                                                Log.d("Firebase", "userId exists: " + userId);
-
-                                                binding.etMessage.addTextChangedListener(new TextWatcher() {
-                                                    private final Handler handler = new Handler();
-                                                    private Runnable typingTimeout;
-
-                                                    @Override
-                                                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-                                                    @Override
-                                                    public void onTextChanged(CharSequence s, int start, int before, int count) {
-                                                        if (s.length() > 0) {
-                                                            setUserTypingStatus(); // User is typing
-                                                        }
-
-                                                        // Remove previous timeout
-                                                        if (typingTimeout != null) {
-                                                            handler.removeCallbacks(typingTimeout);
-                                                        }
-
-                                                        // Set timeout to stop typing after 3 seconds of inactivity
-                                                        typingTimeout = () -> setUserOnlineStatus();
-                                                        handler.postDelayed(typingTimeout, 3000); // 3 seconds
-                                                    }
-
-                                                    @Override
-                                                    public void afterTextChanged(Editable s) {
-                                                        // If text is empty, immediately stop typing status
-                                                        if (s.length() == 0) {
-                                                            setUserOnlineStatus();
-                                                        }
-                                                    }
-                                                });
-
-                                            } else {
-                                                // Key does not exist
-                                                Log.d("Firebase", "userId does not exist");
-                                            }
-                                        }
-
-                                        @Override
-                                        public void onCancelled(DatabaseError databaseError) {
-                                            Log.e("Firebase", "Database error: " + databaseError.getMessage());
-                                        }
-                                    });
-
-
-                        } else {
-                            // Key does not exist
-                            Log.d("Firebase", "userId does not exist");
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                        Log.e("Firebase", "Database error: " + databaseError.getMessage());
-                    }
-                });
-
-//        databaseRef.child("chats")
-//                .child(senderId)
-//                .child(senderRoom)
-//                        .addValueEventListener(new ValueEventListener() {
-//                            @Override
-//                            public void onDataChange(@NonNull DataSnapshot snapshot) {
-//
-//                                for (DataSnapshot dataSnapshot : snapshot.getChildren()){
-//                                    MessageModel message = dataSnapshot.getValue(MessageModel.class);
-//
-//                                    if (message != null && message.getuId().equals(receiverId) && !message.isSeen()) {
-//                                        snapshot.getRef().child(dataSnapshot.getKey()).child("seen").setValue(true);
-//                                    }
-//                                }
-//
-//                                databaseRef.child("chats")
-//                                        .child(receiverId)
-//                                        .child(receiverRoom)
-//                                        .addValueEventListener(new ValueEventListener() {
-//                                            @Override
-//                                            public void onDataChange(@NonNull DataSnapshot snapshot) {
-//
-//                                                for (DataSnapshot dataSnapshot : snapshot.getChildren()){
-//                                                    MessageModel message = dataSnapshot.getValue(MessageModel.class);
-//
-//                                                    if (message != null && message.getuId().equals(receiverId) && !message.isSeen()) {
-//                                                        snapshot.getRef().child(dataSnapshot.getKey()).child("seen").setValue(true);
-//                                                    }
-//                                                }
-//
-//                                            }
-//
-//                                            @Override
-//                                            public void onCancelled(@NonNull DatabaseError error) {
-//
-//                                            }
-//                                        });
-//
-//                            }
-//
-//                            @Override
-//                            public void onCancelled(@NonNull DatabaseError error) {
-//
-//                            }
-//                        });
-
-//        DatabaseReference messagesRef = databaseRef.child("chats")
-//                .child(senderId)
-//                .child(senderRoom);
-//
-//        messagesRef.addChildEventListener(new ChildEventListener() {
-//            @Override
-//            public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-//                MessageModel newMessage = snapshot.getValue(MessageModel.class);
-//
-//                // Check if it's a message from the other user
-//                if (newMessage != null && newMessage.getuId().equals(receiverId)) {
-//                    // Mark it as read immediately
-////                    snapshot.getRef().child("read").setValue(true);
-//                    Log.d(TAG, "onChildAdded: new message come"+newMessage.getMessage());
-//                    Log.d(TAG, "onChildAdded: new message come"+newMessage.getuId());
-//
-//                    // Optionally update the ChatList as well
-//                    markMessagesAsRead();
-//                }
-//            }
-//            @Override
-//            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {}
-//            @Override
-//            public void onChildRemoved(@NonNull DataSnapshot snapshot) {}
-//            @Override
-//            public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {}
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError error) {}
-//        });
-
-        databaseRef.child("ChatList").child(senderId).child(receiverId).addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                ChatlistModel chatEntry = snapshot.getValue(ChatlistModel.class);
-                if (chatEntry != null && Objects.equals(chatEntry.getLastMessageBy(), receiverId)) {
-                    chatEntry.setRead(true);
-                    chatEntry.setReadCount(0); // Reset unread count
-
-                    databaseRef.child("ChatList").child(senderId).child(receiverId)
-                            .setValue(chatEntry).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                @Override
-                                public void onComplete(@NonNull Task<Void> task) {
-                                    databaseRef.child("ChatList").child(receiverId).child(senderId).addValueEventListener(new ValueEventListener() {
-                                        @Override
-                                        public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                            ChatlistModel chatEntry = snapshot.getValue(ChatlistModel.class);
-                                            if (chatEntry != null) {
-                                                chatEntry.setReadByUser(true);
-
-                                                databaseRef.child("ChatList").child(receiverId).child(senderId)
-                                                        .setValue(chatEntry);
-                                            }
-                                        }
-
-                                        @Override
-                                        public void onCancelled(@NonNull DatabaseError error) {
-
-                                        }
-                                    });
-                                }
-                            });
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });
-
-        databaseRef.child("chats").child(senderId).child(senderRoom).addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                // Store old list for comparison
-                ArrayList<ChatItem> oldChatItems = new ArrayList<>(chatItems);
-                ArrayList<ChatItem> newChatItems = new ArrayList<>();
-
-                String lastDate = "";
-                SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
-
-                for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
-                    MessageModel model = dataSnapshot.getValue(MessageModel.class);
-                    if (model == null) continue;
-
-                    model.setMessageId(dataSnapshot.getKey());
-
-                    String currentDate = dateFormat.format(new Date(model.getTimestamp()));
-                    if (!currentDate.equals(lastDate)) {
-                        newChatItems.add(new ChatItem(getFriendlyDateHeader(model.getTimestamp())));
-                        lastDate = currentDate;
-                    }
-
-                    newChatItems.add(new ChatItem(model));
-                }
-
-                // Calculate diff and update adapter
-                DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new ChatItemDiffCallback(oldChatItems, newChatItems));
-
-                chatItems.clear();
-                chatItems.addAll(newChatItems);
-                diffResult.dispatchUpdatesTo(chatAdapter);
-                scrollToBottom();
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Log.e(TAG, "Database error: " + error.getMessage());
-            }
-        });
-
-        binding.sendBtn.setOnClickListener(v -> {
-            String messageText = binding.etMessage.getText().toString().trim();
-
-            if (messageText.isEmpty()) {
-                binding.etMessage.setError("Enter Message");
-                return;
-            }
-            // Send message and update chat lists
-            sendMessage(messageText);
-        });
-    }
-
-//    private void setUserTypingStatus() {
-//        FirebaseDatabase.getInstance().getReference("Users")
-//                .child(senderId)
-//                .child("status")
-//                .setValue("typing");
-//
-//        databaseRef.child("ChatList")
-//                .child(receiverId)
-//                .child(senderId)
-//                .child("isTyping").setValue(true);
-//    }
-//
-//    private void setUserOnlineStatus() {
-//        FirebaseDatabase.getInstance().getReference("Users")
-//                .child(senderId)
-//                .child("status")
-//                .setValue("online");
-//
-//        databaseRef.child("ChatList")
-//                .child(receiverId)
-//                .child(senderId)
-//                .child("isTyping").setValue(false);
-//    }
-
-    private void setUserTypingStatus() {
-
-
-        FirebaseDatabase.getInstance().getReference("Users")
-                .child(senderId)
-                .child("status")
-                .setValue("typing");
-
-        // Update typing status in ChatList with proper field name
-        databaseRef.child("ChatList")
-                .child(receiverId)
-                .child(senderId)
-                .child("isTyping").setValue(true)
-                .addOnSuccessListener(aVoid -> Log.d(TAG, "Typing status set to true"))
-                .addOnFailureListener(e -> Log.e(TAG, "Failed to set typing status: " + e.getMessage()));
-    }
-
-    private void setUserOnlineStatus() {
-        FirebaseDatabase.getInstance().getReference("Users")
-                .child(senderId)
-                .child("status")
-                .setValue("online");
-
-        // Update typing status in ChatList
-        databaseRef.child("ChatList")
-                .child(receiverId)
-                .child(senderId)
-                .child("isTyping").setValue(false)
-                .addOnSuccessListener(aVoid -> Log.d(TAG, "Typing status set to false"))
-                .addOnFailureListener(e -> Log.e(TAG, "Failed to set typing status: " + e.getMessage()));
-    }
-
-
-
-    private void sendMessage(String messageText) {
-        // First, send the message to both chat rooms
-        databaseRef.child("chats").child(senderId).child(senderRoom).push().setValue(new MessageModel(senderId, messageText, new Date().getTime(), false))
-                .addOnSuccessListener(unused -> databaseRef.child("chats").child(receiverId).child(receiverRoom).push().setValue(new MessageModel(senderId, messageText, new Date().getTime(), false))
-                        .addOnSuccessListener(unused1 -> {
-                            // Message sent successfully, now update chat lists
-                            updateChatLists(messageText);
-                            binding.etMessage.setText("");
-//                            scrollToBottom();
-                        }));
-    }
-
-    private void updateChatLists(String messageText) {
-        long currentTime = new Date().getTime();
-
-        // Get sender's info to update receiver's chat list
-        databaseRef.child("Users").child(senderId)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        Users senderUser = snapshot.getValue(Users.class);
-                        if (senderUser != null) {
-                            // Create/Update receiver's chat list entry
-                            ChatlistModel receiverChatEntry = new ChatlistModel();
-                            receiverChatEntry.setUserId(senderId);
-                            receiverChatEntry.setLastMessageBy(senderId);
-                            receiverChatEntry.setUserName(senderUser.getUserName());
-                            receiverChatEntry.setProfilepic(senderUser.getProfilepic());
-                            receiverChatEntry.setLastMessage(messageText);
-                            receiverChatEntry.setLastMsgTime(currentTime);
-                            receiverChatEntry.setReadByUser(true);
-                            receiverChatEntry.setReadCount(0);
-                            receiverChatEntry.setRead(false);
-
-                            // Check if chat entry exists and update unread count
-                            databaseRef.child("ChatList").child(receiverId).child(senderId)
-                                    .addListenerForSingleValueEvent(new ValueEventListener() {
-                                        @Override
-                                        public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                            ChatlistModel existingChat = snapshot.getValue(ChatlistModel.class);
-                                            if (existingChat != null) {
-                                                receiverChatEntry.setReadCount(existingChat.getReadCount() + 1);
-                                            } else {
-                                                receiverChatEntry.setReadCount(1);
-                                            }
-
-                                            // Save to receiver's chat list
-                                            databaseRef.child("ChatList").child(receiverId).child(senderId)
-                                                    .setValue(receiverChatEntry);
-
-                                            // Send notification
-                                            databaseRef.child("Users").child(receiverId)
-                                                    .addListenerForSingleValueEvent(new ValueEventListener() {
-                                                        @Override
-                                                        public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                                            String fcmToken = snapshot.child("FCMToken").getValue(String.class);
-                                                            if (fcmToken != null) {
-                                                                NotificationSender.sendNotification(fcmToken, senderId, senderUser.getUserName(), messageText, senderUser.getProfilepic());
-                                                            }
-                                                        }
-
-                                                        @Override
-                                                        public void onCancelled(@NonNull DatabaseError error) {}
-                                                    });
-                                        }
-
-                                        @Override
-                                        public void onCancelled(@NonNull DatabaseError error) {}
-                                    });
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {}
-                });
-
-        // Get receiver's info to update sender's chat list
-        databaseRef.child("Users").child(receiverId)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        Users receiverUser = snapshot.getValue(Users.class);
-                        if (receiverUser != null) {
-                            // Create/Update sender's chat list entry
-                            ChatlistModel senderChatEntry = new ChatlistModel();
-                            senderChatEntry.setUserId(receiverId);
-                            senderChatEntry.setLastMessageBy(senderId);
-                            senderChatEntry.setUserName(receiverUser.getUserName());
-                            senderChatEntry.setProfilepic(receiverUser.getProfilepic());
-                            senderChatEntry.setLastMessage(messageText);
-                            senderChatEntry.setLastMsgTime(currentTime);
-                            senderChatEntry.setReadByUser(false);
-                            senderChatEntry.setRead(true); // Sender has read their own message
-                            senderChatEntry.setReadCount(0); // Reset unread count for sender
-
-                            // Save to sender's chat list
-                            databaseRef.child("ChatList").child(senderId).child(receiverId)
-                                    .setValue(senderChatEntry);
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {}
-                });
-    }
-
-    private void markMessagesAsRead() {
-        if (senderId != null && receiverId != null) {
-            // Mark the chat as read in current user's chat list
-            databaseRef.child("ChatList").child(senderId).child(receiverId)
-                    .addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(@NonNull DataSnapshot snapshot) {
-                            ChatlistModel chatEntry = snapshot.getValue(ChatlistModel.class);
-                            if (chatEntry != null) {
-                                chatEntry.setRead(true);
-                                chatEntry.setReadByUser(true);
-                                chatEntry.setReadCount(0); // Reset unread count
-
-                                databaseRef.child("ChatList").child(senderId).child(receiverId)
-                                        .setValue(chatEntry);
-                            }
-                        }
-
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError error) {
-                            Log.e(TAG, "Error marking messages as read: " + error.getMessage());
-                        }
-                    });
-
-            // Mark the chat as read in current user's chat list
-            databaseRef.child("ChatList").child(receiverId).child(senderId)
-                    .addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(@NonNull DataSnapshot snapshot) {
-                            ChatlistModel chatEntry = snapshot.getValue(ChatlistModel.class);
-                            if (chatEntry != null) {
-                                chatEntry.setReadByUser(true);
-
-                                databaseRef.child("ChatList").child(receiverId).child(senderId)
-                                        .setValue(chatEntry);
-                            }
-                        }
-
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError error) {
-                            Log.e(TAG, "Error marking messages as read: " + error.getMessage());
-                        }
-                    });
-        }
-    }
-
-    private void scrollToBottom() {
-        if (chatAdapter.getItemCount() > 0) {
-            binding.chatRecyclerView.post(() -> binding.chatRecyclerView.smoothScrollToPosition(chatAdapter.getItemCount() - 1));
-        }
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            finish();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
     public static String getFriendlyDateHeader(long timestamp) {
         Calendar messageCal = Calendar.getInstance();
         messageCal.setTimeInMillis(timestamp);
@@ -963,13 +829,15 @@ public class ChatDetailActivity extends AppCompatActivity {
         Calendar todayCal = Calendar.getInstance();
 
         // Today
-        if (messageCal.get(Calendar.YEAR) == todayCal.get(Calendar.YEAR) && messageCal.get(Calendar.DAY_OF_YEAR) == todayCal.get(Calendar.DAY_OF_YEAR)) {
+        if (messageCal.get(Calendar.YEAR) == todayCal.get(Calendar.YEAR) &&
+                messageCal.get(Calendar.DAY_OF_YEAR) == todayCal.get(Calendar.DAY_OF_YEAR)) {
             return "Today";
         }
 
         // Yesterday
         todayCal.add(Calendar.DAY_OF_YEAR, -1);
-        if (messageCal.get(Calendar.YEAR) == todayCal.get(Calendar.YEAR) && messageCal.get(Calendar.DAY_OF_YEAR) == todayCal.get(Calendar.DAY_OF_YEAR)) {
+        if (messageCal.get(Calendar.YEAR) == todayCal.get(Calendar.YEAR) &&
+                messageCal.get(Calendar.DAY_OF_YEAR) == todayCal.get(Calendar.DAY_OF_YEAR)) {
             return "Yesterday";
         }
 

@@ -1,6 +1,7 @@
 package com.example.mychatapp;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 
@@ -26,115 +27,157 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 
 public class SelectContactActivity extends AppCompatActivity {
-    ActivitySelectContactBinding binding;
-    FirebaseAuth auth;
-    FirebaseDatabase database;
-    SelectContctAdapter adapter;
-    ArrayList<Users> userList;
-    LinearLayoutManager layoutManager;
+    private ActivitySelectContactBinding binding;
+    private FirebaseAuth auth;
+    private FirebaseDatabase database;
+    private SelectContctAdapter adapter;
+    private ArrayList<Users> userList;
     private ShimmerFrameLayout shimmerFrameLayout;
+    private ValueEventListener usersListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        initializeViews();
+        setupToolbar();
+        setupRecyclerView();
+        setupRefreshButton();
+        loadUsers();
+    }
+
+    private void initializeViews() {
         EdgeToEdge.enable(this);
         binding = ActivitySelectContactBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
+        shimmerFrameLayout = binding.shimmerViewContainer;
+        auth = FirebaseAuth.getInstance();
+        database = FirebaseDatabase.getInstance();
+        userList = new ArrayList<>();
+    }
+
+    private void setupToolbar() {
         setSupportActionBar(binding.toolbar);
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setTitle("Select Contact");
         }
+    }
 
-        // Initialize shimmer
-        shimmerFrameLayout = binding.shimmerViewContainer;
-
-        auth = FirebaseAuth.getInstance();
-        database = FirebaseDatabase.getInstance();
-        userList = new ArrayList<>();
-        layoutManager = new LinearLayoutManager(this);
+    private void setupRecyclerView() {
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         adapter = new SelectContctAdapter(userList);
         binding.selectChatRV.setAdapter(adapter);
         binding.selectChatRV.setLayoutManager(layoutManager);
+    }
 
-        // Start shimmer effect
-        startShimmer();
-
-        binding.refreshButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                binding.refreshButton.setVisibility(View.GONE);
-                binding.refreshProgress.setVisibility(View.VISIBLE);
-
-                // Show shimmer during refresh
-                startShimmer();
-                loadUsers();
-            }
+    private void setupRefreshButton() {
+        binding.refreshButton.setOnClickListener(v -> {
+            binding.refreshButton.setVisibility(View.GONE);
+            binding.refreshProgress.setVisibility(View.VISIBLE);
+            startShimmer();
+            loadUsers();
         });
-
-        // Load users from Firebase
-        loadUsers();
     }
 
     private void startShimmer() {
-        shimmerFrameLayout.setVisibility(View.VISIBLE);
-        shimmerFrameLayout.startShimmer();
-        binding.selectChatRV.setVisibility(View.GONE);
+        if (shimmerFrameLayout != null) {
+            shimmerFrameLayout.setVisibility(View.VISIBLE);
+            shimmerFrameLayout.startShimmer();
+            binding.selectChatRV.setVisibility(View.GONE);
+        }
     }
 
     private void stopShimmer() {
-        shimmerFrameLayout.stopShimmer();
-        shimmerFrameLayout.setVisibility(View.GONE);
-        binding.selectChatRV.setVisibility(View.VISIBLE);
+        if (shimmerFrameLayout != null) {
+            shimmerFrameLayout.stopShimmer();
+            shimmerFrameLayout.setVisibility(View.GONE);
+            binding.selectChatRV.setVisibility(View.VISIBLE);
+        }
     }
 
     private void loadUsers() {
-        database.getReference().child("Users").addValueEventListener(new ValueEventListener() {
+        startShimmer();
+
+        usersListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 userList.clear();
-                for (DataSnapshot dataSnapshot : snapshot.getChildren()){
-                    Users users = dataSnapshot.getValue(Users.class);
-                    if (users != null) {
-                        users.setUserId(dataSnapshot.getKey());
+                String currentUserId = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : null;
 
-                        if (!users.getUserId().equals(FirebaseAuth.getInstance().getUid())){
-                            userList.add(users);
-                        }
+                for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
+                    Users user = new Users();
+                    user.setProfilepic(dataSnapshot.child("profilepic").getValue(String.class));
+                    user.setUserName(dataSnapshot.child("userName").getValue(String.class));
+                    user.setAbout(dataSnapshot.child("about").getValue(String.class));
+                    user.setUserId(dataSnapshot.getKey());
+
+                    if (!user.getUserId().equals(currentUserId)) {
+                        userList.add(user);
                     }
                 }
+
                 adapter.notifyDataSetChanged();
-
-                // Stop shimmer and show RecyclerView
-                stopShimmer();
-                binding.refreshProgress.setVisibility(View.GONE);
-                binding.refreshButton.setVisibility(View.VISIBLE);
-
-                // Update subtitle with actual count
-                if (getSupportActionBar() != null) {
-                    getSupportActionBar().setSubtitle(userList.size() + " contacts");
-                }
+                updateUI();
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                // Stop shimmer even if there's an error
-                stopShimmer();
+                handleError(error);
             }
-        });
+        };
+
+        database.getReference().child("Users").addListenerForSingleValueEvent(usersListener);
+    }
+
+    private void updateUI() {
+        stopShimmer();
+        binding.refreshProgress.setVisibility(View.GONE);
+        binding.refreshButton.setVisibility(View.VISIBLE);
+        updateSubtitle();
+    }
+
+    private void updateSubtitle() {
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            String subtitle = userList.size() == 1 ? "1 contact" : userList.size() + " contacts";
+            actionBar.setSubtitle(subtitle);
+        }
+    }
+
+    private void handleError(DatabaseError error) {
+        stopShimmer();
+        binding.refreshProgress.setVisibility(View.GONE);
+        binding.refreshButton.setVisibility(View.VISIBLE);
+
+        // Log error or show user-friendly message
+         Log.e("SelectContactActivity", "Database error: " + error.getMessage());
+    }
+
+    private String getSnapshotType(DataSnapshot snapshot) {
+        Object value = snapshot.child("status").getValue();
+
+        if (value == null) return "null";
+        if (value instanceof String) return "String";
+        if (value instanceof Long) return "Long";
+        if (value instanceof Integer) return "Integer";
+        if (value instanceof Boolean) return "Boolean";
+        if (value instanceof Double) return "Double";
+
+        return value.getClass().getSimpleName(); // fallback
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        // Resume shimmer if it was running
-        if (shimmerFrameLayout.getVisibility() == View.VISIBLE) {
+        if (shimmerFrameLayout != null && shimmerFrameLayout.getVisibility() == View.VISIBLE) {
             shimmerFrameLayout.startShimmer();
         }
     }
@@ -142,8 +185,20 @@ public class SelectContactActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        // Pause shimmer to save resources
-        shimmerFrameLayout.stopShimmer();
+        if (shimmerFrameLayout != null) {
+            shimmerFrameLayout.stopShimmer();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Clean up listeners to prevent memory leaks
+        if (usersListener != null && database != null) {
+            database.getReference().child("Users").removeEventListener(usersListener);
+        }
+        // Clean up binding
+        binding = null;
     }
 
     @Override
