@@ -216,22 +216,34 @@ public class HomeFragment extends Fragment {
     private void applyFilter() {
         filteredChatList.clear();
 
+        // Check if unread chip is checked
         if (binding.unreadChip.isChecked()) {
+            // Filter for unread chats only
             for (ChatlistModel chat : chatList) {
                 if (!chat.isRead()) { // Only add unread chats
                     filteredChatList.add(chat);
                 }
             }
         } else {
-            // "All" selected — copy everything
+            // "All" selected or default — copy everything
             filteredChatList.addAll(chatList);
         }
 
         if (adapter != null) {
             adapter.notifyDataSetChanged();
         }
+
+        // Update UI state after filtering
+        updateUIAfterFiltering();
     }
 
+    private void updateUIAfterFiltering() {
+        if (filteredChatList.isEmpty()) {
+            showEmptyState();
+        } else {
+            showChatList();
+        }
+    }
 
     private void showShimmer() {
         if (shimmerFrameLayout != null && binding != null) {
@@ -282,6 +294,14 @@ public class HomeFragment extends Fragment {
         if (shimmerFrameLayout != null && shimmerFrameLayout.getVisibility() == View.VISIBLE) {
             shimmerFrameLayout.startShimmer();
         }
+
+        // Reset to "All Chats" when resuming to avoid empty state
+        if (binding != null) {
+            binding.allChatsChip.setChecked(true);
+            binding.unreadChip.setChecked(false);
+            // Apply filter after setting chip state to refresh the UI
+            applyFilter();
+        }
     }
 
     @Override
@@ -308,5 +328,6 @@ public class HomeFragment extends Fragment {
         binding = null;
         adapter = null;
         chatList = null;
+        filteredChatList = null;
     }
 }

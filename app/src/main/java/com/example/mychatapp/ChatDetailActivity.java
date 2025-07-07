@@ -603,7 +603,6 @@ public class ChatDetailActivity extends AppCompatActivity {
                 if (snapshot.exists()) {
                     Map<String, Object> updates = new HashMap<>();
                     updates.put("read", true);
-                    updates.put("readByUser", true);
                     updates.put("readCount", 0);
                     senderRef.updateChildren(updates);
                 }
