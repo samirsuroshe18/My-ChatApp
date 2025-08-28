@@ -1,21 +1,26 @@
 
 
-  # Project Name: My ChatApp (Whatsapp clone) <br>
+  # Project Name: My ChatApp <br>
 
+<img width="188" alt="login" src="https://github.com/user-attachments/assets/ad921577-82da-430b-ad94-f204bb229e00" />
+<img width="188" alt="register" src="https://github.com/user-attachments/assets/82bfdc49-fe8c-46cd-ae34-6dc35873a9bc" />
+<img width="188" alt="google-signin" src="https://github.com/user-attachments/assets/499a3f1d-bcaf-49f9-9da7-83029bd60350" />
+<img width="188" alt="home" src="https://github.com/user-attachments/assets/6d20b89f-96f6-4e65-b951-c205827aefd1" />
+<img width="188" alt="chat" src="https://github.com/user-attachments/assets/0d98fe22-bb56-4e24-a723-2b7b631e4231" />
+<img width="188" alt="profile" src="https://github.com/user-attachments/assets/3cfd1b2c-f7f1-4a8f-bef0-71047154626d" />
 
-<img src="https://github.com/samirsuroshe18/My-ChatApp/assets/130245723/b1fa434e-e61b-461e-b0c0-04a354eafb8f" width="188" >  
-<img src="https://github.com/samirsuroshe18/My-ChatApp/assets/130245723/60412565-6c0c-4fb5-99d2-c200f910504d" width="188" >  
-<img src="https://github.com/samirsuroshe18/My-ChatApp/assets/130245723/19a38a3d-7e86-4d48-8c2d-e3264cd60dee" width="188" >  
-<img src="https://github.com/samirsuroshe18/My-ChatApp/assets/130245723/68cf6a45-e9da-4c48-b896-3d1ee374c781" width="188" > 
-<img src="https://github.com/samirsuroshe18/My-ChatApp/assets/130245723/3462d43d-5afc-47e7-a88f-7c0a6df89969" width="188" >
-<img src="https://github.com/samirsuroshe18/My-ChatApp/assets/130245723/2d456208-8b1e-4b11-a36a-601f52078887" width="188" >
 
 ## Get
-<div>
-  <img src="https://github.com/samirsuroshe18/My-ChatApp/assets/130245723/d236e6c8-d5eb-41a5-9fa9-b29f69e597d6" width="80" height="80" >
+<div align="center" style="margin: 20px 0;">
+  <img width="80" height="80" alt="chat_app_icon" 
+       src="https://github.com/user-attachments/assets/95440a12-b545-440f-8696-6dc3696f9b76" 
+       style="margin-right: 20px;" />
+       
   <a href="https://github.com/samirsuroshe18/My-ChatApp/releases/tag/1.0.0">
-<img src="https://github.com/samirsuroshe18/WellBeing-app---Android-studio/assets/130245723/f2d2622b-2fd1-4576-af9e-68ec0e56c79e" height="80">
-</a>
+    <img src="https://github.com/samirsuroshe18/WellBeing-app---Android-studio/assets/130245723/f2d2622b-2fd1-4576-af9e-68ec0e56c79e" 
+         height="80" 
+         style="margin-left: 20px;" />
+  </a>
 </div>
 
 ## Project Overview
@@ -25,6 +30,7 @@ My ChatApp is a messaging application for Android devices, designed to provide u
 This project was built using a variety of technologies across the frontend, backend, and design. Below is a breakdown of the key technologies used in the development of this app:
 
 ### Frontend
+
 - **Java**: The primary programming language used to develop the app's functionality.
 - **XML**: Used for designing the app's user interface.
 
