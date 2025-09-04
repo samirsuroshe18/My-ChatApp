@@ -1,81 +1,71 @@
+# 📱 My ChatApp
 
+A modern Android chat application providing a seamless messaging experience with features like Google sign-in, one-to-one chats, and profile management — similar to WhatsApp but built from scratch with Firebase.
 
-  # Project Name: My ChatApp (Whatsapp clone) <br>
+## 🎥 Demo
 
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=ScsVUOd-dFw" target="_blank">
+    <img src="https://img.shields.io/badge/Watch%20on%20YouTube-red?logo=youtube&logoColor=white&style=for-the-badge" alt="Watch on YouTube"/>
+  </a>
+</p>
 
-<img src="https://github.com/samirsuroshe18/My-ChatApp/assets/130245723/b1fa434e-e61b-461e-b0c0-04a354eafb8f" width="188" >  
-<img src="https://github.com/samirsuroshe18/My-ChatApp/assets/130245723/60412565-6c0c-4fb5-99d2-c200f910504d" width="188" >  
-<img src="https://github.com/samirsuroshe18/My-ChatApp/assets/130245723/19a38a3d-7e86-4d48-8c2d-e3264cd60dee" width="188" >  
-<img src="https://github.com/samirsuroshe18/My-ChatApp/assets/130245723/68cf6a45-e9da-4c48-b896-3d1ee374c781" width="188" > 
-<img src="https://github.com/samirsuroshe18/My-ChatApp/assets/130245723/3462d43d-5afc-47e7-a88f-7c0a6df89969" width="188" >
-<img src="https://github.com/samirsuroshe18/My-ChatApp/assets/130245723/2d456208-8b1e-4b11-a36a-601f52078887" width="188" >
+## 📸 Screenshots
 
-## Get
-<div>
-  <img src="https://github.com/samirsuroshe18/My-ChatApp/assets/130245723/d236e6c8-d5eb-41a5-9fa9-b29f69e597d6" width="80" height="80" >
+<p align="center">
+  <img width="188" alt="login" src="https://github.com/user-attachments/assets/ad921577-82da-430b-ad94-f204bb229e00" />
+  <img width="188" alt="register" src="https://github.com/user-attachments/assets/82bfdc49-fe8c-46cd-ae34-6dc35873a9bc" />
+  <img width="188" alt="google-signin" src="https://github.com/user-attachments/assets/499a3f1d-bcaf-49f9-9da7-83029bd60350" />
+  <img width="188" alt="home" src="https://github.com/user-attachments/assets/6d20b89f-96f6-4e65-b951-c205827aefd1" />
+  <img width="188" alt="chat" src="https://github.com/user-attachments/assets/0d98fe22-bb56-4e24-a723-2b7b631e4231" />
+  <img width="188" alt="profile" src="https://github.com/user-attachments/assets/3cfd1b2c-f7f1-4a8f-bef0-71047154626d" />
+</p>
+
+## 📥 Download
+
+<p align="center">
+  <img width="80" height="80" alt="chat_app_icon" src="https://github.com/user-attachments/assets/95440a12-b545-440f-8696-6dc3696f9b76" />
+  <br/><br/>
   <a href="https://github.com/samirsuroshe18/My-ChatApp/releases/tag/1.0.0">
-<img src="https://github.com/samirsuroshe18/WellBeing-app---Android-studio/assets/130245723/f2d2622b-2fd1-4576-af9e-68ec0e56c79e" height="80">
-</a>
-</div>
+    <img src="https://img.shields.io/badge/Download%20APK-blue?style=for-the-badge&logo=android" alt="Download APK"/>
+  </a>
+</p>
 
-## Project Overview
-My ChatApp is a messaging application for Android devices, designed to provide users with a seamless chatting experience similar to popular messaging apps like WhatsApp. It allows users to exchange messages individually or in group chats, register and log in using their Google accounts, and manage their profiles. It was created in July 2023 and is available for download on Github. Application can be found [here](https://github.com/samirsuroshe18/My-ChatApp/releases/tag/1.0.0). To use the app, simply download .apk file from the github and install on your android device, create an account, and start chatting.
+## 🚀 Features
+- 🔑 Google sign-in authentication  
+- 💬 Private one-to-one chats
+- 👤 Customizable user profiles 
+- ✍️ Real-time typing indicators  
+- 📩 Read receipts (Read/Unread messages)  
+- 🔔 Push notifications (via FCM)  
+- ⚡ Real-time data sync (Firebase Realtime Database)
 
-## Technologies Used
-This project was built using a variety of technologies across the frontend, backend, and design. Below is a breakdown of the key technologies used in the development of this app:
+## 🛠️ Tech Stack
+- **Language:** Java  
+- **UI:** XML layouts  
+- **Backend:** Firebase (Auth, Realtime Database, Storage)  
+- **IDE:** Android Studio  
+- **Design Tools:** Figma, Eraser.io (data modeling)  
 
-### Frontend
-- **Java**: The primary programming language used to develop the app's functionality.
-- **XML**: Used for designing the app's user interface.
+## 📲 Installation
+1. Download the APK from the [Releases](https://github.com/samirsuroshe18/My-ChatApp/releases/tag/1.0.0).  
+2. Enable **installation from unknown sources** on your device.  
+3. Tap the APK file to install it.  
+4. Create an account or sign in with Google to start chatting.  
 
-### Backend
-- **Firebase**: Backend services for authentication, real-time database, and storage.
+## ⚙️ For Developers (Setup Guide)
+1. Clone this repo  
+   ```bash
+   git clone https://github.com/samirsuroshe18/My-ChatApp.git
+2. Open in Android Studio
+3. Add your Firebase project + google-services.json file
+4. Enable Firebase Authentication (Google Sign-In)
+5. Setup Firebase Realtime Database + Storage
+6. Sync Gradle and run on emulator or device
 
-### Tools
-- **Android Studio**: The integrated development environment (IDE) used for Android app development.
-- **Figma**: The tool used for designing and prototyping the user interface and experience of the app.
- - **Eraser.io**: Used for designing and visualizing the data model, facilitating a clear understanding of the database structure and relationships.
+## 📬 Contact
+👨‍💻 Developer: Samir Suroshe  
+📧 Email: [sameersuroshe50@gmail.com](mailto:sameersuroshe50@gmail.com)  
+🔗 LinkedIn: [samir suroshe](https://www.linkedin.com/in/samir-suroshe-50b073271)  
 
-
-## Configuration Instructions
-To achieve optimum performance, we recommend the following computer and software configurations:
-- Operating System: Android 7.0 (Nougat) or higher
-- Minimum RAM: 2GB
-- Storage: 100MB free space
-- Internet connection for updates
-- **Firebase Setup:** 
-  - Create a Firebase project and add your Android app to it.
-  - Enable Firebase Authentication and configure Google Sign-In.
-  - Set up Firebase Realtime Database for storing chat messages.
-  - Configure Firebase Storage for storing images and media files.
-
-## Installation Instructions
-To install the My ChatApp Android Application, follow these steps:
-1. Download the APK file from the assets section of the release information.
-2. Enable installation from unknown sources in your device settings.
-3. Open the APK file and follow the on-screen instructions to install the app.
-4. Alternatively, clone the repository and import the project into Android Studio.
-5. Configure the project settings as needed.
-6. Build and run the project on your device or emulator.
-
-## Operating Instructions
-The My ChatApp App allows users to:
-- Register and log in using their Google accounts.
-- Exchange messages individually or in group chats.
-- View and edit their profile information, including username and status.
-
-## List of Files Included
-- /app: Contains the source code of the Android application.
-  - /src: Contains the Java source code files.
-  - /res: Contains resources such as layout files, images, and strings.
-- /docs: Contains documentation files for the project.
-- /README.md: The README file you are currently reading.
-
-## Contact Information
-For any inquiries or support, please feel free to contact us:
-- Developer: Samir Suroshe
-- Email : [sameersuroshe50@gmail.com](mailto:sameersuroshe50@gmail.com)
-- Linkedin: [samir suroshe](www.linkedin.com/in/samir-suroshe-50b073271)
-
-Your support and contributions are greatly appreciated!
-
+Your feedback and contributions are always welcome!
