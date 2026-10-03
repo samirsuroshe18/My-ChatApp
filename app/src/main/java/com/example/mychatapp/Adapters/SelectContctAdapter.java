@@ -48,7 +48,12 @@ public class SelectContctAdapter extends RecyclerView.Adapter<SelectContctAdapte
     public void onBindViewHolder(@NonNull SelectContctAdapter.ViewHolder holder, int position) {
         Users users = userList.get(position);
 
-        Picasso.get().load(users.getProfilepic()).placeholder(R.drawable.profile_pic_avatar).into(holder.profileImage);
+        String profilePic = users.getProfilepic();
+        if (profilePic == null || profilePic.trim().isEmpty()) {
+            holder.profileImage.setImageResource(R.drawable.profile_pic_avatar);
+        } else {
+            Picasso.get().load(profilePic).placeholder(R.drawable.profile_pic_avatar).into(holder.profileImage);
+        }
         holder.userName.setText(users.getUserName());
         holder.aboutMessage.setText(users.getAbout());
 

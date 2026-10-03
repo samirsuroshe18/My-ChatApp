@@ -284,26 +284,33 @@ public class SignInActivity extends AppCompatActivity {
      * Save user information to Firebase Database with null safety
      */
     private void saveUserToDatabase(@NonNull FirebaseUser firebaseUser) {
-        Users user = createUserFromFirebaseUser(firebaseUser);
+        DatabaseReference userRef = databaseReference.child("Users").child(firebaseUser.getUid());
 
-        if (user != null) {
-            databaseReference.child("Users").child(firebaseUser.getUid())
-                    .setValue(user)
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            Log.d(TAG, "User data saved successfully");
-                            navigateToHome();
-                        } else {
-                            Log.e(TAG, "Failed to save user data", task.getException());
-                            // Still navigate to home as authentication was successful
-                            navigateToHome();
-                        }
-                    });
-        } else {
-            Log.e(TAG, "Failed to create user object from FirebaseUser");
-            // Still navigate to home as authentication was successful
-            navigateToHome();
-        }
+        // Create the profile only on the first sign-in, so later edits are not overwritten
+        userRef.child("userName").addListenerForSingleValueEvent(new com.google.firebase.database.ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull com.google.firebase.database.DataSnapshot snapshot) {
+                Users user = snapshot.exists() ? null : createUserFromFirebaseUser(firebaseUser);
+                if (user == null) {
+                    navigateToHome();
+                    return;
+                }
+
+                userRef.setValue(user).addOnCompleteListener(task -> {
+                    if (!task.isSuccessful()) {
+                        Log.e(TAG, "Failed to save user data", task.getException());
+                    }
+                    // Still navigate to home as authentication was successful
+                    navigateToHome();
+                });
+            }
+
+            @Override
+            public void onCancelled(@NonNull com.google.firebase.database.DatabaseError error) {
+                Log.e(TAG, "Failed to read user data", error.toException());
+                navigateToHome();
+            }
+        });
     }
 
     /**
@@ -314,14 +321,13 @@ public class SignInActivity extends AppCompatActivity {
         try {
             Users user = new Users();
             user.setUserId(firebaseUser.getUid());
-            user.setUserName(firebaseUser.getDisplayName());
+            String displayName = firebaseUser.getDisplayName();
+            user.setUserName(displayName != null && !displayName.trim().isEmpty() ? displayName : "User");
             user.setAbout("Hey there! I am using MyChatApp.");
 
             // Handle potential null photo URL
             if (firebaseUser.getPhotoUrl() != null) {
                 user.setProfilepic(firebaseUser.getPhotoUrl().toString());
-            } else {
-                user.setProfilepic(""); // Default empty string or use a default profile pic URL
             }
 
             return user;

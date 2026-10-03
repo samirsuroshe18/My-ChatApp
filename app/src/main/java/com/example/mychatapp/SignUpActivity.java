@@ -9,6 +9,7 @@ import android.util.Patterns;
 import android.view.View;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -272,23 +273,33 @@ public class SignUpActivity extends AppCompatActivity {
     private void handleSuccessfulGoogleSignIn() {
         FirebaseUser firebaseUser = auth.getCurrentUser();
         if (firebaseUser != null) {
-            Users user = new Users();
-            user.setUserId(firebaseUser.getUid());
-            user.setUserName(firebaseUser.getDisplayName());
-            user.setAbout("Hey there! I am using MyChatApp.");
-
-            // Check if profile picture exists
-            if (firebaseUser.getPhotoUrl() != null) {
-                user.setProfilepic(firebaseUser.getPhotoUrl().toString());
-            }
-
             String userId = firebaseUser.getUid();
+            com.google.firebase.database.DatabaseReference userRef =
+                    database.getReference().child("Users").child(userId);
 
-            database.getReference()
-                    .child("Users")
-                    .child(userId)
-                    .setValue(user)
-                    .addOnCompleteListener(dbTask -> {
+            // Create the profile only on the first sign-in, so later edits are not overwritten
+            userRef.child("userName").addListenerForSingleValueEvent(new com.google.firebase.database.ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull com.google.firebase.database.DataSnapshot snapshot) {
+                    if (snapshot.exists()) {
+                        setupFCMToken(userId);
+                        showSuccessMessage("Google sign in successful!");
+                        navigateToHome();
+                        return;
+                    }
+
+                    Users user = new Users();
+                    user.setUserId(userId);
+                    String displayName = firebaseUser.getDisplayName();
+                    user.setUserName(displayName != null && !displayName.trim().isEmpty() ? displayName : "User");
+                    user.setAbout("Hey there! I am using MyChatApp.");
+
+                    // Check if profile picture exists
+                    if (firebaseUser.getPhotoUrl() != null) {
+                        user.setProfilepic(firebaseUser.getPhotoUrl().toString());
+                    }
+
+                    userRef.setValue(user).addOnCompleteListener(dbTask -> {
                         if (dbTask.isSuccessful()) {
                             setupFCMToken(userId);
                             showSuccessMessage("Google sign in successful!");
@@ -298,6 +309,14 @@ public class SignUpActivity extends AppCompatActivity {
                             showErrorMessage("Failed to save user data");
                         }
                     });
+                }
+
+                @Override
+                public void onCancelled(@NonNull com.google.firebase.database.DatabaseError error) {
+                    Log.e(TAG, "Failed to read Google user data", error.toException());
+                    showErrorMessage("Failed to save user data");
+                }
+            });
         }
     }
 

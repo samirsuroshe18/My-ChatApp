@@ -1,5 +1,6 @@
 package com.example.mychatapp.Fragments;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -24,11 +25,15 @@ import com.example.mychatapp.Models.Users;
 import com.example.mychatapp.R;
 import com.example.mychatapp.SignInActivity;
 import com.example.mychatapp.databinding.FragmentSettingBinding;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -86,17 +91,27 @@ public class UserProfileFragment extends Fragment {
         binding.saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String status = binding.etStatus.getText().toString();
-                String userName = binding.etUsername.getText().toString();
+                String status = binding.etStatus.getText().toString().trim();
+                String userName = binding.etUsername.getText().toString().trim();
+
+                if (userName.isEmpty()) {
+                    binding.etUsername.setError("Username is required");
+                    binding.etUsername.requestFocus();
+                    return;
+                }
 
                 HashMap<String, Object> obj = new HashMap<>();
                 obj.put("userName", userName);
                 obj.put("about", status);
 
-                database.getReference().child("Users").child(auth.getUid()).updateChildren(obj);
-                Toast.makeText(getContext(), "Changes Updated Successfully", Toast.LENGTH_SHORT).show();
                 binding.etStatus.clearFocus();
                 binding.etUsername.clearFocus();
+                database.getReference().child("Users").child(auth.getUid()).updateChildren(obj)
+                        .addOnCompleteListener(task -> {
+                            if (getContext() == null) return;
+                            String message = task.isSuccessful() ? "Changes Updated Successfully" : "Failed to update. Please try again";
+                            Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+                        });
             }
         });
 
@@ -110,22 +125,7 @@ public class UserProfileFragment extends Fragment {
                         .setPositiveButton("Logout", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                // Show loading
-                                ProgressDialog progressDialog = new ProgressDialog(requireContext());
-                                progressDialog.setMessage("Logging out...");
-                                progressDialog.setCancelable(false);
-                                progressDialog.show();
-
-                                // Optional delay for smoother UX
-                                new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                                    progressDialog.dismiss();
-                                    String userId = FirebaseAuth.getInstance().getUid();
-                                    database.getReference().child("Users").child(userId).child("FCMToken").removeValue();
-                                    FirebaseAuth.getInstance().signOut();
-                                    Intent intent = new Intent(requireContext(), SignInActivity.class);
-                                    startActivity(intent);
-                                    requireActivity().finishAffinity();
-                                }, 1000);
+                                logout();
                             }
                         })
                         .setNegativeButton("Cancel", null)
@@ -139,9 +139,12 @@ public class UserProfileFragment extends Fragment {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
                         Users users = snapshot.getValue(Users.class);
-                        if (users != null) {
-                            Picasso.get().load(users.getProfilepic())
-                                    .placeholder(R.drawable.profile_pic_avatar).into(binding.profileImg);
+                        if (users != null && binding != null) {
+                            String profilePic = users.getProfilepic();
+                            if (profilePic != null && !profilePic.trim().isEmpty()) {
+                                Picasso.get().load(profilePic)
+                                        .placeholder(R.drawable.profile_pic_avatar).into(binding.profileImg);
+                            }
 
                             binding.etStatus.setText(users.getAbout());
                             binding.etUsername.setText(users.getUserName());
@@ -164,6 +167,47 @@ public class UserProfileFragment extends Fragment {
     }
 
     // Upload profile image to Firebase Storage
+    private void logout() {
+        Activity activity = requireActivity();
+        ProgressDialog progressDialog = new ProgressDialog(activity);
+        progressDialog.setMessage("Logging out...");
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+
+        final boolean[] finished = {false};
+        Runnable finishLogout = () -> {
+            if (finished[0]) return;
+            finished[0] = true;
+
+            // Without this the next Google sign-in silently reuses the same account
+            GoogleSignIn.getClient(activity.getApplicationContext(), GoogleSignInOptions.DEFAULT_SIGN_IN).signOut();
+            FirebaseAuth.getInstance().signOut();
+
+            if (activity.isFinishing() || activity.isDestroyed()) return;
+            progressDialog.dismiss();
+            activity.startActivity(new Intent(activity, SignInActivity.class));
+            activity.finishAffinity();
+        };
+
+        String userId = FirebaseAuth.getInstance().getUid();
+        if (userId == null) {
+            finishLogout.run();
+            return;
+        }
+
+        DatabaseReference userRef = database.getReference().child("Users").child(userId);
+        userRef.child("status").onDisconnect().cancel();
+
+        HashMap<String, Object> updates = new HashMap<>();
+        updates.put("FCMToken", null);
+        updates.put("status", ServerValue.TIMESTAMP);
+
+        // These writes need the signed in session, so sign out only once they are done
+        userRef.updateChildren(updates).addOnCompleteListener(task -> finishLogout.run());
+        // Do not keep the user waiting when the device is offline
+        new Handler(Looper.getMainLooper()).postDelayed(finishLogout, 4000);
+    }
+
     private void uploadProfileImage(Uri fileUri) {
         final StorageReference reference = storage.getReference().child("profilepic")
                 .child(auth.getUid());
@@ -176,7 +220,9 @@ public class UserProfileFragment extends Fragment {
                     public void onSuccess(Uri uri) {
                         database.getReference().child("Users").child(auth.getUid())
                                 .child("profilepic").setValue(uri.toString());
-                        Toast.makeText(getContext(), "Profile Updated Successfully", Toast.LENGTH_SHORT).show();
+                        if (getContext() != null) {
+                            Toast.makeText(getContext(), "Profile Updated Successfully", Toast.LENGTH_SHORT).show();
+                        }
                     }
                 });
             }

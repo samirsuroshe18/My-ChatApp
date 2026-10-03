@@ -91,6 +91,11 @@ public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.ViewHolder> 
     }
 
     private void loadProfileImage(ImageView imageView, String profilePicUrl) {
+        // Picasso rejects an empty path
+        if (profilePicUrl == null || profilePicUrl.trim().isEmpty()) {
+            imageView.setImageResource(R.drawable.profile_pic_avatar);
+            return;
+        }
         Picasso.get()
                 .load(profilePicUrl)
                 .placeholder(R.drawable.profile_pic_avatar)
@@ -207,16 +212,8 @@ public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.ViewHolder> 
 
         databaseRef.updateChildren(updates)
                 .addOnSuccessListener(aVoid -> {
+                    // The chat list listener refreshes the rows, so nothing is removed by hand here
                     Log.d(TAG, "Chat conversation deleted for current user");
-
-                    // Remove from UI
-                    if (position >= 0 && position < chatList.size()) {
-                        chatList.remove(position);
-                        notifyItemRemoved(position);
-                        notifyItemRangeChanged(position, chatList.size());
-                    } else {
-                        Log.w(TAG, "Tried to remove invalid index: " + position);
-                    }
 
                     if (interactionListener != null) {
                         interactionListener.onChatDeleted(chat);

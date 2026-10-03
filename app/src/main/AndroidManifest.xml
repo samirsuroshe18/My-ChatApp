@@ -2,32 +2,22 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-feature
-        android:name="android.hardware.camera"
-        android:required="false" />
-
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
     <!-- Network state permission -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-    <!-- Wake lock permission for FCM -->
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-
     <!-- Vibration permission (optional, for notification vibration) -->
     <uses-permission android:name="android.permission.VIBRATE" />
-
-    <!-- Foreground service permission (if you plan to use foreground services) -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <!-- Boot completed permission (if you want to restart services after reboot) -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
 
     <application
+        android:name=".MyChatApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -36,7 +26,6 @@
         android:roundIcon="@mipmap/avatar_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MyChatApp"
-        android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
             android:name=".SignInActivity"
@@ -70,7 +59,7 @@
 
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="default_notification_channel_id" />
+            android:value="chat_channel" />
 
         <service
             android:name=".utils.MyFirebaseMessagingService"

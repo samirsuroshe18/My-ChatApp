@@ -23,8 +23,7 @@ public class BootReceiver extends BroadcastReceiver {
             FirebaseMessaging.getInstance().getToken()
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
-                            String token = task.getResult();
-                            Log.d(TAG, "FCM token refreshed after boot: " + token);
+                            Log.d(TAG, "FCM token refreshed after boot");
                             // Optionally send to server again
                         }
                     });

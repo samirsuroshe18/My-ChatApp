@@ -84,6 +84,8 @@ public class ChatDetailActivity extends AppCompatActivity {
 
     // SharedPreferences
     private SharedPreferences sharedPreferences;
+    private boolean isChatVisible = false;
+    private boolean typingEnabled = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,7 +96,9 @@ public class ChatDetailActivity extends AppCompatActivity {
 
         initializeComponents();
         setupToolbar();
-        extractIntentData();
+        if (!extractIntentData()) {
+            return;
+        }
         setupRecyclerView();
         setupFirebaseReferences();
         setupUI();
@@ -132,7 +136,7 @@ public class ChatDetailActivity extends AppCompatActivity {
         binding.chatRecyclerView.setAdapter(chatAdapter);
     }
 
-    private void extractIntentData() {
+    private boolean extractIntentData() {
         receiverId = getIntent().getStringExtra("userId");
         userName = getIntent().getStringExtra("userName");
         profilePic = getIntent().getStringExtra("profilePic");
@@ -140,11 +144,12 @@ public class ChatDetailActivity extends AppCompatActivity {
         if (receiverId == null || senderId == null) {
             Log.e(TAG, "Missing required user IDs");
             finish();
-            return;
+            return false;
         }
 
         senderRoom = senderId + receiverId;
         receiverRoom = receiverId + senderId;
+        return true;
     }
 
     private void setupFirebaseReferences() {
@@ -281,7 +286,7 @@ public class ChatDetailActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 ChatlistModel chatEntry = snapshot.getValue(ChatlistModel.class);
-                if (chatEntry != null && receiverId.equals(chatEntry.getLastMessageBy())) {
+                if (isChatVisible && chatEntry != null && receiverId.equals(chatEntry.getLastMessageBy())) {
                     markChatAsRead(chatEntry);
                 }
             }
@@ -378,6 +383,7 @@ public class ChatDetailActivity extends AppCompatActivity {
     }
 
     private void setupTypingDetection() {
+        typingEnabled = true;
         binding.etMessage.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -440,8 +446,10 @@ public class ChatDetailActivity extends AppCompatActivity {
         updates.put("status", "online");
         usersRef.child(senderId).updateChildren(updates);
 
-        // Update typing status in chat list
-        chatListRef.child(receiverId).child(senderId).child("isTyping").setValue(false);
+        // Only touch the other user's chat list when a conversation already exists there
+        if (typingEnabled) {
+            chatListRef.child(receiverId).child(senderId).child("isTyping").setValue(false);
+        }
     }
 
     private void sendMessage(String messageText) {
@@ -451,7 +459,6 @@ public class ChatDetailActivity extends AppCompatActivity {
         messageData.put("timestamp", ServerValue.TIMESTAMP);
         messageData.put("read", false);
         messageData.put("seen", false);
-        Log.d(TAG, "Message data: " + messageData);
 
         // Use batch write for better performance
         Map<String, Object> updates = new HashMap<>();
@@ -461,14 +468,19 @@ public class ChatDetailActivity extends AppCompatActivity {
             updates.put("chats/" + senderId + "/" + senderRoom + "/" + messageKey, messageData);
             updates.put("chats/" + receiverId + "/" + receiverRoom + "/" + messageKey, messageData);
 
+            // Clear the box right away so a second tap cannot send the same text again
+            binding.etMessage.setText("");
+
             databaseRef.updateChildren(updates)
-                    .addOnSuccessListener(unused -> {
-                        updateChatLists(messageText);
-                        binding.etMessage.setText("");
-                    })
+                    .addOnSuccessListener(unused -> updateChatLists(messageText))
                     .addOnFailureListener(e -> {
                         Log.e(TAG, "Failed to send message: " + e.getMessage());
-                        // Show error to user
+                        if (isFinishing() || isDestroyed()) return;
+                        Toast.makeText(this, "Message not sent. Please try again", Toast.LENGTH_SHORT).show();
+                        if (binding.etMessage.getText().toString().isEmpty()) {
+                            binding.etMessage.setText(messageText);
+                            binding.etMessage.setSelection(messageText.length());
+                        }
                     });
         }
     }
@@ -487,7 +499,8 @@ public class ChatDetailActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String userName = snapshot.child("userName").getValue(String.class);
                 String profilepic = snapshot.child("profilepic").getValue(String.class);
-                if (userName != null && profilepic != null) {
+                // A profile picture is optional, a name is not
+                if (userName != null) {
                     ChatlistModel senderChatEntry = createChatListEntry(
                             receiverId, userName, profilepic,
                             messageText, currentTime, senderId, true, false, 0);
@@ -509,7 +522,8 @@ public class ChatDetailActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String userName = snapshot.child("userName").getValue(String.class);
                 String profilepic = snapshot.child("profilepic").getValue(String.class);
-                if (userName != null && profilepic != null) {
+                // A profile picture is optional, a name is not
+                if (userName != null) {
                     // Check existing unread count
                     chatListRef.child(receiverId).child(senderId)
                             .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -631,6 +645,9 @@ public class ChatDetailActivity extends AppCompatActivity {
     }
 
     private void markMessagesAsSeen() {
+        if (markReadListener != null) {
+            chatsRef.child(receiverId).child(receiverRoom).removeEventListener(markReadListener);
+        }
         markReadListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -673,6 +690,7 @@ public class ChatDetailActivity extends AppCompatActivity {
         sharedPreferences.edit()
                 .putString(CURRENT_CHAT_USER_ID, receiverId)
                 .apply();
+        isChatVisible = true;
         markMessagesAsRead();
         markMessagesAsSeen();
     }
@@ -683,6 +701,13 @@ public class ChatDetailActivity extends AppCompatActivity {
         sharedPreferences.edit()
                 .remove(CURRENT_CHAT_USER_ID)
                 .apply();
+        isChatVisible = false;
+        // Messages must not be marked read or seen while the chat is not on screen
+        detachReadListeners();
+        if (typingTimeout != null) {
+            typingHandler.removeCallbacks(typingTimeout);
+            typingTimeout = null;
+        }
         setUserOnlineStatus();
     }
 
@@ -690,6 +715,23 @@ public class ChatDetailActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         cleanup();
+    }
+
+    private void detachReadListeners() {
+        if (senderId == null || receiverId == null) return;
+
+        if (markReadListener != null) {
+            chatsRef.child(receiverId).child(receiverRoom).removeEventListener(markReadListener);
+            markReadListener = null;
+        }
+        if (senderChatListListener != null) {
+            chatListRef.child(senderId).child(receiverId).removeEventListener(senderChatListListener);
+            senderChatListListener = null;
+        }
+        if (receiverChatListListener != null) {
+            chatListRef.child(receiverId).child(senderId).removeEventListener(receiverChatListListener);
+            receiverChatListListener = null;
+        }
     }
 
     private void cleanup() {

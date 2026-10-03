@@ -26,6 +26,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class HomeFragment extends Fragment {
     private static final String TAG = "HomeFragment";
@@ -161,6 +162,9 @@ public class HomeFragment extends Fragment {
                 chatList.add(chatModel);
             }
         }
+
+        // Most recent conversation first
+        Collections.sort(chatList, (first, second) -> Long.compare(second.getLastMsgTime(), first.getLastMsgTime()));
 
         updateUI();
     }

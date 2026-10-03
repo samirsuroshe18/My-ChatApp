@@ -29,6 +29,7 @@ import com.example.mychatapp.Fragments.HomeFragment;
 import com.example.mychatapp.Fragments.UserProfileFragment;
 import com.example.mychatapp.databinding.ActivityHomeBinding;
 import com.example.mychatapp.utils.BatteryOptimizationUtils;
+import com.example.mychatapp.utils.PresenceManager;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
@@ -36,7 +37,8 @@ import com.google.firebase.database.FirebaseDatabase;
 
 public class HomeActivity extends AppCompatActivity {
     private static final String TAG = "HomeActivity";
-    private static final String STATUS_ONLINE = "online";
+    private static final String TAG_HOME_FRAGMENT = "home_fragment";
+    private static final String TAG_PROFILE_FRAGMENT = "profile_fragment";
     private static final String BUNDLE_KEY_ACTIVE_FRAGMENT = "active_fragment";
     private static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 1001;
     private static final int SETTINGS_REQUEST_CODE = 1002;
@@ -295,8 +297,15 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void initializeFragments() {
-        homeFragment = new HomeFragment();
-        userProfileFragment = new UserProfileFragment();
+        // After a rotation the fragment manager has already restored these, so reuse them
+        homeFragment = (HomeFragment) getSupportFragmentManager().findFragmentByTag(TAG_HOME_FRAGMENT);
+        if (homeFragment == null) {
+            homeFragment = new HomeFragment();
+        }
+        userProfileFragment = (UserProfileFragment) getSupportFragmentManager().findFragmentByTag(TAG_PROFILE_FRAGMENT);
+        if (userProfileFragment == null) {
+            userProfileFragment = new UserProfileFragment();
+        }
     }
 
     private void setupBottomNavigation() {
@@ -324,10 +333,8 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void setupUserStatusTracking() {
-        if (userStatusRef != null) {
-            // Set offline status when connection is lost
-            userStatusRef.onDisconnect().setValue(System.currentTimeMillis());
-        }
+        // The user may have just signed in while the app was already on screen
+        PresenceManager.goOnline();
     }
 
     private void loadInitialFragment(@Nullable Bundle savedInstanceState) {
@@ -350,16 +357,18 @@ public class HomeActivity extends AppCompatActivity {
     private void showFragment(@NonNull Fragment fragment) {
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
 
-        // Hide current active fragment
-        if (activeFragment != null) {
-            transaction.hide(activeFragment);
+        // Hide every other tab, including ones restored after a rotation
+        for (Fragment other : new Fragment[]{homeFragment, userProfileFragment}) {
+            if (other != null && other != fragment && other.isAdded()) {
+                transaction.hide(other);
+            }
         }
 
-        // Show selected fragment
         if (fragment.isAdded()) {
             transaction.show(fragment);
         } else {
-            transaction.add(R.id.fragment_container, fragment);
+            String tag = fragment == homeFragment ? TAG_HOME_FRAGMENT : TAG_PROFILE_FRAGMENT;
+            transaction.add(R.id.fragment_container, fragment, tag);
         }
 
         transaction.commit();
@@ -369,7 +378,6 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        setUserStatus(STATUS_ONLINE);
         // Check if battery optimization was disabled when returning from settings
         if (!BatteryOptimizationUtils.isBatteryOptimizationEnabled(this)) {
             SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
@@ -388,9 +396,6 @@ public class HomeActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
 
-        // Set offline timestamp
-        setUserStatus(System.currentTimeMillis());
-
         // Clean up binding
         binding = null;
     }
@@ -402,13 +407,6 @@ public class HomeActivity extends AppCompatActivity {
         // Save active fragment state if needed
         if (activeFragment != null) {
             outState.putString(BUNDLE_KEY_ACTIVE_FRAGMENT, activeFragment.getClass().getSimpleName());
-        }
-    }
-
-    private void setUserStatus(@NonNull Object status) {
-        if (userStatusRef != null) {
-            userStatusRef.setValue(status)
-                    .addOnFailureListener(e -> Log.e(TAG, "Failed to update user status", e));
         }
     }
 }

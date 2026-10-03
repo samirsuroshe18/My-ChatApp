@@ -24,8 +24,6 @@ import com.google.firebase.messaging.RemoteMessage;
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
     private static final String TAG = "MyFirebaseMessagingService";
-    private DatabaseReference mDatabase;
-
     @Override
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
@@ -37,11 +35,6 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         String userName = remoteMessage.getData().get("userName");
         String textMessage = remoteMessage.getData().get("textMessage");
         String profilePic = remoteMessage.getData().get("profilePic");
-        Log.d(TAG, "userId: "+ userId);
-        Log.d(TAG, "userName: "+ userName);
-        Log.d(TAG, "textMessage: "+ textMessage);
-
-        mDatabase = FirebaseDatabase.getInstance().getReference();
 
         // Get currently open chat user (if any)
         SharedPreferences prefs = getSharedPreferences("chat_app", MODE_PRIVATE);
@@ -58,7 +51,6 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     @Override
     public void onNewToken(@NonNull String token) {
         super.onNewToken(token);
-        Log.d(TAG, "Refreshed token: " + token);
 
         // Send token to your server
         sendTokenToServer(token);
@@ -69,10 +61,10 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     private void sendTokenToServer(String token) {
         String userId = FirebaseAuth.getInstance().getUid();
-        Log.d(TAG, "Sending token to server: " + token);
 
         if (userId != null) {
-            mDatabase.child("Users").child(userId).child("FCMToken").setValue(token);
+            FirebaseDatabase.getInstance().getReference()
+                    .child("Users").child(userId).child("FCMToken").setValue(token);
         }
     }
 
@@ -89,8 +81,10 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         intent.putExtra("profilePic", profilePic);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
+        // A distinct request code per sender keeps each notification pointing at its own chat
+        int requestCode = userId != null ? userId.hashCode() : 0;
         PendingIntent pendingIntent = PendingIntent.getActivity(
-                this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+                this, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "chat_channel")
