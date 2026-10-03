@@ -29,7 +29,8 @@ public class NotificationSender {
             json.put("userId", userId);
             json.put("userName", userName);
             json.put("textMessage", textMessage);
-            json.put("profilePic", profilePic);
+            // Send an empty value instead of dropping the field when the sender has no photo
+            json.put("profilePic", profilePic != null ? profilePic : "");
 
             RequestBody body = RequestBody.create(json.toString(), JSON);
 
