@@ -26,46 +26,65 @@ A modern Android chat application providing a seamless messaging experience with
 <p align="center">
   <img width="80" height="80" alt="chat_app_icon" src="https://github.com/user-attachments/assets/95440a12-b545-440f-8696-6dc3696f9b76" />
   <br/><br/>
-  <a href="https://github.com/samirsuroshe18/My-ChatApp/releases/tag/1.0.0">
+  <a href="https://github.com/samirsuroshe18/My-ChatApp/releases/latest">
     <img src="https://img.shields.io/badge/Download%20APK-blue?style=for-the-badge&logo=android" alt="Download APK"/>
   </a>
 </p>
 
 ## 🚀 Features
-- 🔑 Google sign-in authentication  
+- 🔑 Google sign-in authentication
+- 📧 Email sign-up with a verification link  
 - 💬 Private one-to-one chats
 - 👤 Customizable user profiles 
 - ✍️ Real-time typing indicators  
-- 📩 Read receipts (Read/Unread messages)  
+- 📩 Read receipts (Read/Unread messages)
+- 🟢 Online status and last seen
+- 🔢 Unread message counts and an unread chats filter
+- 🗑️ Delete a message, clear a chat or delete a conversation  
 - 🔔 Push notifications (via FCM)  
 - ⚡ Real-time data sync (Firebase Realtime Database)
 
 ## 🛠️ Tech Stack
 - **Language:** Java  
 - **UI:** XML layouts  
-- **Backend:** Firebase (Auth, Realtime Database, Storage)  
+- **Backend:** Firebase (Auth, Realtime Database, Storage, Cloud Messaging)
+- **Notifications:** a small Node.js server, [pushNotification](https://github.com/samirsuroshe18/pushNotification)  
 - **IDE:** Android Studio  
 - **Design Tools:** Figma, Eraser.io (data modeling)  
 
 ## 📲 Installation
-1. Download the APK from the [Releases](https://github.com/samirsuroshe18/My-ChatApp/releases/tag/1.0.0).  
+1. Download the APK from the [Releases](https://github.com/samirsuroshe18/My-ChatApp/releases/latest).  
 2. Enable **installation from unknown sources** on your device.  
 3. Tap the APK file to install it.  
 4. Create an account or sign in with Google to start chatting.  
 
 ## ⚙️ For Developers (Setup Guide)
-1. Clone this repo  
+1. Clone this repo
    ```bash
    git clone https://github.com/samirsuroshe18/My-ChatApp.git
-2. Open in Android Studio
-3. Add your Firebase project + google-services.json file
-4. Enable Firebase Authentication (Google Sign-In)
-5. Setup Firebase Realtime Database + Storage
-6. Sync Gradle and run on emulator or device
+   ```
+2. Open the project in Android Studio.
+3. Create a Firebase project, add an Android app with the package name
+   `com.example.mychatapp`, and put its `google-services.json` in the `app/` folder.
+4. Add the SHA-1 fingerprint of your signing key to that Android app in the
+   Firebase console. Google sign-in fails without it.
+5. Enable Firebase Authentication with the **Email/Password** and **Google** providers.
+6. Set up the Firebase Realtime Database and Storage.
+7. Sync Gradle and run on an emulator or a device.
+
+Push notifications go through a small server that lives in a separate repository:
+[pushNotification](https://github.com/samirsuroshe18/pushNotification).
+The server's address is `SERVER_URL` in
+`app/src/main/java/com/example/mychatapp/utils/NotificationSender.java`;
+change it there to use a server of your own.
 
 ## 📬 Contact
 👨‍💻 Developer: Samir Suroshe  
 📧 Email: [sameersuroshe50@gmail.com](mailto:sameersuroshe50@gmail.com)  
-🔗 LinkedIn: [samir suroshe](https://www.linkedin.com/in/samir-suroshe-50b073271)  
+🔗 LinkedIn: [samir suroshe](https://www.linkedin.com/in/samir-suroshe)  
 
 Your feedback and contributions are always welcome!
+
+## License
+
+[MIT](LICENSE)
