@@ -188,8 +188,14 @@ public class SignInActivity extends AppCompatActivity {
                             navigateToHome();
                         } else {
                             progressDialog.dismiss();
-                            firebaseAuth.signOut(); // Prevent access
-                            Toast.makeText(this, "Please verify your email before logging in.", Toast.LENGTH_LONG).show();
+                            if (user != null) {
+                                // Send the link again, the first email may never have arrived
+                                user.sendEmailVerification()
+                                        .addOnCompleteListener(sent -> firebaseAuth.signOut()); // Prevent access
+                            } else {
+                                firebaseAuth.signOut();
+                            }
+                            Toast.makeText(this, "Please verify your email before logging in. The link has been sent again.", Toast.LENGTH_LONG).show();
                         }
 
                     } else {
@@ -385,6 +391,9 @@ public class SignInActivity extends AppCompatActivity {
      * Navigate to home activity and finish current activity
      */
     private void navigateToHome() {
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
         String userId = FirebaseAuth.getInstance().getUid();
         FirebaseMessaging.getInstance().getToken().addOnCompleteListener(new OnCompleteListener<String>() {
             @Override

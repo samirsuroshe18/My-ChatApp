@@ -91,7 +91,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         MessageModel msg = item.getMessageModel();
         FirebaseUser currentUser = firebaseAuth.getCurrentUser();
 
-        if (currentUser != null && msg.getSenderId().equals(currentUser.getUid())) {
+        if (currentUser != null && currentUser.getUid().equals(msg.getSenderId())) {
             return SENDER_VIEW_TYPE;
         } else {
             return RECEIVER_VIEW_TYPE;

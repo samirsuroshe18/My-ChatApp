@@ -206,6 +206,10 @@ public class HomeActivity extends AppCompatActivity {
         // Add a slight delay to not overwhelm user with multiple dialogs
         // and to ensure notification permission dialog is handled first
         new android.os.Handler().postDelayed(() -> {
+            // A dialog cannot be shown on a screen that was closed or rotated in the meantime
+            if (isFinishing() || isDestroyed()) {
+                return;
+            }
             checkBatteryOptimization();
         }, 2000); // 2 second delay
     }
