@@ -124,7 +124,8 @@ public class SignInActivity extends AppCompatActivity {
                 result -> {
                     progressDialog.dismiss();
 
-                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    // A failed sign-in also carries its reason in the data, only a real cancel has none
+                    if (result.getData() != null) {
                         handleGoogleSignInResult(result.getData());
                     } else {
                         Log.w(TAG, "Google Sign-In cancelled or failed");
