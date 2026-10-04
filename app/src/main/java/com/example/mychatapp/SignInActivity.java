@@ -191,12 +191,16 @@ public class SignInActivity extends AppCompatActivity {
                             progressDialog.dismiss();
                             if (user != null) {
                                 // Send the link again, the first email may never have arrived
-                                user.sendEmailVerification()
-                                        .addOnCompleteListener(sent -> firebaseAuth.signOut()); // Prevent access
+                                user.sendEmailVerification().addOnCompleteListener(sent -> {
+                                    firebaseAuth.signOut(); // Prevent access
+                                    showToast(sent.isSuccessful()
+                                            ? "Please verify your email before logging in. The link has been sent again."
+                                            : "Please verify your email before logging in.");
+                                });
                             } else {
                                 firebaseAuth.signOut();
+                                showToast("Please verify your email before logging in.");
                             }
-                            Toast.makeText(this, "Please verify your email before logging in. The link has been sent again.", Toast.LENGTH_LONG).show();
                         }
 
                     } else {
@@ -238,6 +242,11 @@ public class SignInActivity extends AppCompatActivity {
                 showToast("Google Sign-In failed: Invalid account data");
             }
         } catch (ApiException e) {
+            if (e.getStatusCode() == com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes.SIGN_IN_CANCELLED) {
+                Log.w(TAG, "Google Sign-In cancelled");
+                showToast("Google Sign-In was cancelled");
+                return;
+            }
             Log.e(TAG, "Google Sign-In failed", e);
             showToast("Google Sign-In failed: " + e.getMessage());
         }
