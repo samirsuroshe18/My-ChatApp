@@ -96,6 +96,13 @@ public class SplashActivity extends AppCompatActivity {
         versionText.setAlpha(0f);
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Do not open the next screen after the splash was closed or rotated
+        mainHandler.removeCallbacksAndMessages(null);
+    }
+
     private void startAnimations() {
         animateMainContent();
         animateLoadingIndicator();
@@ -170,9 +177,13 @@ public class SplashActivity extends AppCompatActivity {
     }
 
     private void startMainActivity() {
+        if (isFinishing() || isDestroyed()) {
+            return;
+        }
         Bundle extras = getIntent().getExtras();
 
-        if (isNotificationLaunch(extras)) {
+        // A notification can still be on screen after a logout; a chat needs a signed in user
+        if (isNotificationLaunch(extras) && firebaseAuth.getCurrentUser() != null) {
             handleNotificationLaunch(extras);
         } else {
             handleNormalLaunch();

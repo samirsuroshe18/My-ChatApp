@@ -124,7 +124,8 @@ public class SignInActivity extends AppCompatActivity {
                 result -> {
                     progressDialog.dismiss();
 
-                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    // A failed sign-in also carries its reason in the data, only a real cancel has none
+                    if (result.getData() != null) {
                         handleGoogleSignInResult(result.getData());
                     } else {
                         Log.w(TAG, "Google Sign-In cancelled or failed");
@@ -188,8 +189,18 @@ public class SignInActivity extends AppCompatActivity {
                             navigateToHome();
                         } else {
                             progressDialog.dismiss();
-                            firebaseAuth.signOut(); // Prevent access
-                            Toast.makeText(this, "Please verify your email before logging in.", Toast.LENGTH_LONG).show();
+                            if (user != null) {
+                                // Send the link again, the first email may never have arrived
+                                user.sendEmailVerification().addOnCompleteListener(sent -> {
+                                    firebaseAuth.signOut(); // Prevent access
+                                    showToast(sent.isSuccessful()
+                                            ? "Please verify your email before logging in. The link has been sent again."
+                                            : "Please verify your email before logging in.");
+                                });
+                            } else {
+                                firebaseAuth.signOut();
+                                showToast("Please verify your email before logging in.");
+                            }
                         }
 
                     } else {
@@ -231,6 +242,11 @@ public class SignInActivity extends AppCompatActivity {
                 showToast("Google Sign-In failed: Invalid account data");
             }
         } catch (ApiException e) {
+            if (e.getStatusCode() == com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes.SIGN_IN_CANCELLED) {
+                Log.w(TAG, "Google Sign-In cancelled");
+                showToast("Google Sign-In was cancelled");
+                return;
+            }
             Log.e(TAG, "Google Sign-In failed", e);
             showToast("Google Sign-In failed: " + e.getMessage());
         }
@@ -385,6 +401,9 @@ public class SignInActivity extends AppCompatActivity {
      * Navigate to home activity and finish current activity
      */
     private void navigateToHome() {
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
         String userId = FirebaseAuth.getInstance().getUid();
         FirebaseMessaging.getInstance().getToken().addOnCompleteListener(new OnCompleteListener<String>() {
             @Override

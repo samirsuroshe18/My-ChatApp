@@ -119,7 +119,8 @@ public class SelectContactActivity extends AppCompatActivity {
                     user.setAbout(dataSnapshot.child("about").getValue(String.class));
                     user.setUserId(dataSnapshot.getKey());
 
-                    if (!user.getUserId().equals(currentUserId)) {
+                    // A record without a name is not a complete profile
+                    if (user.getUserName() != null && !user.getUserId().equals(currentUserId)) {
                         userList.add(user);
                     }
                 }

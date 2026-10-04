@@ -1,5 +1,6 @@
 package com.example.mychatapp;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
@@ -73,6 +74,7 @@ public class ChatDetailActivity extends AppCompatActivity {
 
     // Listeners for cleanup
     private ValueEventListener userStatusListener;
+    private ValueEventListener receiverTypingListener;
     private ValueEventListener chatMessagesListener;
     private ValueEventListener markReadListener;
     private ValueEventListener chatListListener;
@@ -86,6 +88,8 @@ public class ChatDetailActivity extends AppCompatActivity {
     private SharedPreferences sharedPreferences;
     private boolean isChatVisible = false;
     private boolean typingEnabled = false;
+    private Object receiverStatus;
+    private boolean receiverTypingHere = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -186,17 +190,8 @@ public class ChatDetailActivity extends AppCompatActivity {
         userStatusListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()) {
-                    Object status = snapshot.child("status").getValue();
-                    Log.d(TAG, "User status Type listener: " + status.getClass());
-                    if(status instanceof Number){
-                        Log.d(TAG, "User status listener Long: " + status);
-                        updateUserStatus(getTimeAgo((Long) status));
-                    }else {
-                        Log.d(TAG, "User status listener: " + status);
-                        updateUserStatus((String) status);
-                    }
-                }
+                receiverStatus = snapshot.child("status").getValue();
+                showReceiverStatus();
             }
 
             @Override
@@ -205,31 +200,35 @@ public class ChatDetailActivity extends AppCompatActivity {
             }
         };
         usersRef.child(receiverId).addValueEventListener(userStatusListener);
+
+        // The status says that the other user is typing, this says whether it is in this chat
+        receiverTypingListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                receiverTypingHere = Boolean.TRUE.equals(snapshot.getValue());
+                showReceiverStatus();
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e(TAG, "Typing listener error: " + error.getMessage());
+            }
+        };
+        chatListRef.child(senderId).child(receiverId).child("isTyping")
+                .addValueEventListener(receiverTypingListener);
     }
 
-    private void updateUserStatus(String status) {
-        Log.d(TAG, "Updating user status: " + status);
-        if (status == null) return;
-
-        switch (status) {
-            case "online":
-                binding.userStatusChat.setText("Online");
-                break;
-            case "typing":
-                binding.userStatusChat.setText("Typing...");
-                break;
-            default:
-                try {
-                    if(status!=null){
-                        binding.userStatusChat.setText("Last seen: " + status);
-                    }else{
-                        long lastSeen = Long.parseLong(status);
-                        binding.userStatusChat.setText("Last seen: " + getTimeAgo(lastSeen));
-                    }
-                } catch (NumberFormatException e) {
-                    binding.userStatusChat.setText("Offline");
-                }
-                break;
+    private void showReceiverStatus() {
+        Object status = receiverStatus;
+        if (status instanceof Number) {
+            binding.userStatusChat.setText("Last seen: " + getTimeAgo(((Number) status).longValue()));
+        } else if ("typing".equals(status) && receiverTypingHere) {
+            binding.userStatusChat.setText("Typing...");
+        } else if ("online".equals(status) || "typing".equals(status)) {
+            binding.userStatusChat.setText("Online");
+        } else {
+            // Someone who has not signed in yet has no status
+            binding.userStatusChat.setText("Offline");
         }
     }
 
@@ -278,7 +277,10 @@ public class ChatDetailActivity extends AppCompatActivity {
         chatItems.addAll(newChatItems);
         diffResult.dispatchUpdatesTo(chatAdapter);
 
-        scrollToBottom();
+        // A seen tick or a deleted message must not pull the list away from where the user is reading
+        if (newChatItems.size() > oldChatItems.size()) {
+            scrollToBottom();
+        }
     }
 
     private void setupChatListListener() {
@@ -717,6 +719,21 @@ public class ChatDetailActivity extends AppCompatActivity {
         cleanup();
     }
 
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        // A notification from someone else was tapped while this chat was open
+        String otherUserId = intent.getStringExtra("userId");
+        if (otherUserId != null && !otherUserId.equals(receiverId)) {
+            Intent chatIntent = new Intent(this, ChatDetailActivity.class);
+            chatIntent.putExtra("userId", otherUserId);
+            chatIntent.putExtra("userName", intent.getStringExtra("userName"));
+            chatIntent.putExtra("profilePic", intent.getStringExtra("profilePic"));
+            finish();
+            startActivity(chatIntent);
+        }
+    }
+
     private void detachReadListeners() {
         if (senderId == null || receiverId == null) return;
 
@@ -738,6 +755,10 @@ public class ChatDetailActivity extends AppCompatActivity {
         // Remove Firebase listeners
         if (userStatusListener != null && receiverId != null) {
             usersRef.child(receiverId).removeEventListener(userStatusListener);
+        }
+        if (receiverTypingListener != null && senderId != null && receiverId != null) {
+            chatListRef.child(senderId).child(receiverId).child("isTyping")
+                    .removeEventListener(receiverTypingListener);
         }
         if (chatMessagesListener != null && senderId != null && senderRoom != null) {
             chatsRef.child(senderId).child(senderRoom).removeEventListener(chatMessagesListener);

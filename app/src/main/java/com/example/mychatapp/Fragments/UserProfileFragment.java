@@ -21,10 +21,10 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
-import com.example.mychatapp.Models.Users;
 import com.example.mychatapp.R;
 import com.example.mychatapp.SignInActivity;
 import com.example.mychatapp.databinding.FragmentSettingBinding;
+import com.example.mychatapp.utils.PresenceManager;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -138,16 +138,16 @@ public class UserProfileFragment extends Fragment {
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        Users users = snapshot.getValue(Users.class);
-                        if (users != null && binding != null) {
-                            String profilePic = users.getProfilepic();
+                        // Read field by field: the status is a text or a number, depending on the moment
+                        if (snapshot.exists() && binding != null) {
+                            String profilePic = snapshot.child("profilepic").getValue(String.class);
                             if (profilePic != null && !profilePic.trim().isEmpty()) {
                                 Picasso.get().load(profilePic)
                                         .placeholder(R.drawable.profile_pic_avatar).into(binding.profileImg);
                             }
 
-                            binding.etStatus.setText(users.getAbout());
-                            binding.etUsername.setText(users.getUserName());
+                            binding.etStatus.setText(snapshot.child("about").getValue(String.class));
+                            binding.etUsername.setText(snapshot.child("userName").getValue(String.class));
                         }
                     }
 
@@ -195,6 +195,8 @@ public class UserProfileFragment extends Fragment {
             return;
         }
 
+        // Otherwise a reconnect would mark the signed out user online again
+        PresenceManager.goOffline();
         DatabaseReference userRef = database.getReference().child("Users").child(userId);
         userRef.child("status").onDisconnect().cancel();
 
@@ -225,6 +227,10 @@ public class UserProfileFragment extends Fragment {
                         }
                     }
                 });
+            }
+        }).addOnFailureListener(e -> {
+            if (getContext() != null) {
+                Toast.makeText(getContext(), "Failed to update the profile picture. Please try again", Toast.LENGTH_SHORT).show();
             }
         });
     }

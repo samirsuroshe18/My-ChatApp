@@ -184,7 +184,9 @@ public class SignUpActivity extends AppCompatActivity {
                                 finish();
                             } else {
                                 Log.e(TAG, "Failed to send verification email", emailTask.getException());
-                                showErrorMessage("Failed to send verification email. Try again later.");
+                                // An unverified account must not stay signed in
+                                auth.signOut();
+                                showErrorMessage("Failed to send verification email. Log in to get a new link.");
                             }
                         });
 
@@ -241,9 +243,9 @@ public class SignUpActivity extends AppCompatActivity {
         auth.fetchSignInMethodsForEmail(email)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
-                        boolean isEmailRegisteredWithPassword = task.getResult()
-                                .getSignInMethods()
-                                .contains("password");
+                        List<String> signInMethods = task.getResult().getSignInMethods();
+                        boolean isEmailRegisteredWithPassword = signInMethods != null
+                                && signInMethods.contains("password");
 
                         if (isEmailRegisteredWithPassword) {
                             // 🚫 Show warning and stop Google login
