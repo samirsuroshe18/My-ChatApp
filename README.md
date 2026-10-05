@@ -48,7 +48,7 @@ A modern Android chat application providing a seamless messaging experience with
 - **Language:** Java  
 - **UI:** XML layouts  
 - **Backend:** Firebase (Auth, Realtime Database, Storage, Cloud Messaging)
-- **Notifications:** a small Node.js server, [pushNotification](https://github.com/samirsuroshe18/pushNotification)  
+- **Notifications:** a small Node.js server that relays messages through Firebase Cloud Messaging  
 - **IDE:** Android Studio  
 - **Design Tools:** Figma, Eraser.io (data modeling)  
 
@@ -72,8 +72,8 @@ A modern Android chat application providing a seamless messaging experience with
 6. Set up the Firebase Realtime Database and Storage.
 7. Sync Gradle and run on an emulator or a device.
 
-Push notifications go through a small server that lives in a separate repository:
-[pushNotification](https://github.com/samirsuroshe18/pushNotification).
+Push notifications go through a small Node.js server that relays each message
+through Firebase Cloud Messaging; it is kept in a separate, private repository.
 The server's address is `SERVER_URL` in
 `app/src/main/java/com/example/mychatapp/utils/NotificationSender.java`;
 change it there to use a server of your own.
